@@ -2,8 +2,7 @@
 
 Rubric-locked IELTS Academic Writing practice with local scoring, optional AI examiner feedback (OpenAI / DeepSeek / **Grok** / OpenRouter), Task 1 charts, and 600+ real Task 2 prompts.
 
-**Live site:** `https://<your-github-username>.github.io/ielts-writing-examiner-lab/`  
-(Available after you push to GitHub and enable Pages — see below.)
+**Live site:** https://chengchenno1.github.io/IELTS-Writing-Examiner-Lab/
 
 ## Features
 
@@ -43,7 +42,7 @@ npm run fetch:task1
 
 ## Deploy to GitHub Pages
 
-1. Create a repository named **`ielts-writing-examiner-lab`** (or update `base` in `vite.config.js` to match your repo name).
+1. Repository: **[ChengChenNO1/IELTS-Writing-Examiner-Lab](https://github.com/ChengChenNO1/IELTS-Writing-Examiner-Lab)**
 2. Push this project to the `main` branch.
 3. In GitHub → **Settings → Pages → Build and deployment**, set source to **GitHub Actions**.
 4. The workflow `.github/workflows/deploy-pages.yml` will build and publish automatically.
