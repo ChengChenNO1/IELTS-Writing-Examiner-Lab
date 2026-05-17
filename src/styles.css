@@ -712,6 +712,18 @@ blockquote {
   font-weight: 700;
 }
 
+.api-builtin-ready {
+  color: #256f5b;
+  font-weight: 600;
+}
+
+.api-settings code {
+  font-size: 12px;
+  padding: 1px 4px;
+  background: #eef5ed;
+  border-radius: 4px;
+}
+
 .eval-error {
   margin: 0;
   padding: 10px 12px;

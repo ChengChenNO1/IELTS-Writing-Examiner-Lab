@@ -10,24 +10,36 @@ Rubric-locked IELTS Academic Writing practice with local scoring, optional AI ex
 - 601 real Task 2 prompts (2013–2026) from [ielts-site](https://yanyihann.github.io/ielts-site/)
 - Local rule-based scoring (no API required)
 - **AI grading** with native English polishing (sentence-level edits, collocations, model paragraph)
-- API key stored only in your browser (`localStorage`)
+- Optional **built-in API** for local dev (Volcengine Ark via `.env.local`, never committed)
+- Custom API key stored only in your browser (`localStorage`)
+
+## Built-in AI (local only, not on GitHub)
+
+1. Copy `env.example` → `.env.local`
+2. Set `VITE_BUILTIN_ARK_API_KEY=ark-your-key-here` (Volcengine Ark console)
+3. Restart `npm run dev`
+4. In the app: enable **使用内置 API** — leave custom Key empty to use builtin
+
+The key is injected at dev time only. **GitHub Pages builds do not include any secret.** Online visitors must use their own API key.
+
+Default builtin model: `deepseek-v3-2-251201` via `https://ark.cn-beijing.volces.com/api/v3/chat/completions` (OpenAI-compatible; no web_search in examiner mode).
 
 ## AI providers
 
 | Provider | Base URL | Key format |
 |----------|----------|------------|
+| **Volcengine Ark** | `https://ark.cn-beijing.volces.com/api/v3` | `ark-...` |
 | OpenAI | `https://api.openai.com/v1` | `sk-...` |
 | DeepSeek | `https://api.deepseek.com/v1` | `sk-...` |
 | **Grok (xAI)** | `https://api.x.ai/v1` | `xai-...` |
 | OpenRouter | `https://openrouter.ai/api/v1` | `sk-or-...` |
 | Custom | Any OpenAI-compatible endpoint | — |
 
-Get a Grok key: [console.x.ai](https://console.x.ai/)
-
 ## Local development
 
 ```bash
 npm install
+cp env.example .env.local   # then add your ark- key
 npm run dev
 ```
 

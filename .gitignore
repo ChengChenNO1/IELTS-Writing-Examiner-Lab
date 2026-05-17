@@ -8,4 +8,6 @@ tsconfig.node.tsbuildinfo
 tmp-*.html
 tmp-*.json
 .env
-.env.*
+.env.local
+.env.*.local
+!.env.example

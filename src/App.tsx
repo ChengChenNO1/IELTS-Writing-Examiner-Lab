@@ -18,7 +18,7 @@ import {
 import { calibrationNotes, examinerPhrases, topics } from "./data";
 import { Topic } from "./data";
 import { ApiSettingsPanel } from "./ai/ApiSettingsPanel";
-import { isAiReady, loadAiConfig, type AiConfig } from "./ai/config";
+import { isAiReady, loadAiConfig, resolveEffectiveConfig, type AiConfig } from "./ai/config";
 import { evaluateEssayWithAi } from "./ai/evaluateWithAi";
 import { PolishPanel } from "./components/PolishPanel";
 import { Evaluation, essaySurfaceStats, evaluateEssay } from "./evaluator";
@@ -469,7 +469,7 @@ function App() {
           <strong>{evaluation.overall.toFixed(evaluation.overall % 1 ? 1 : 0)}</strong>
           <p>
             {evaluation.mode === "ai"
-              ? `Senior examiner model · ${aiConfig.model}`
+              ? `Senior examiner model · ${resolveEffectiveConfig(aiConfig).model}${aiConfig.useBuiltin && !aiConfig.apiKey.trim() ? " (builtin)" : ""}`
               : `Local rule-based estimate · enable AI for native polishing`}
           </p>
           <div className="history">
