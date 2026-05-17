@@ -1,0 +1,86 @@
+{
+  "fetchedAt": "2026-05-17T08:47:01.895Z",
+  "source": "ieltsliz.com",
+  "topics": [
+    {
+      "id": "ext-spreads",
+      "label": "Consumption of spreads (1981–2007)",
+      "type": "line graph",
+      "prompt": "The graph below shows the consumption of three kinds of spreads between 1981 and 2007. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+      "imageUrl": "https://ieltsliz.com/wp-content/uploads/2014/12/ielts-line-graph-spreads.png",
+      "source": "ieltsliz.com",
+      "keywords": [
+        "graph",
+        "consumption",
+        "spreads",
+        "1981",
+        "2007"
+      ]
+    },
+    {
+      "id": "ext-fruit-veg",
+      "label": "Fruit and vegetables in the UK",
+      "type": "bar chart",
+      "prompt": "The bar chart below shows the percentage of people who ate five portions of fruit and vegetables per day in the UK from 2001 to 2008. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+      "imageUrl": "https://ieltsliz.com/wp-content/uploads/2018/10/IELTS-Writing-task-1-October-2018-1.png",
+      "source": "ieltsliz.com",
+      "keywords": [
+        "bar",
+        "chart",
+        "fruit",
+        "vegetables",
+        "percentage",
+        "2001",
+        "2008"
+      ]
+    },
+    {
+      "id": "ext-consumer-goods",
+      "label": "Consumer goods expenditure",
+      "type": "bar chart",
+      "prompt": "The bar chart below shows the expenditure of two countries in consumer goods in 2010. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+      "imageUrl": "https://ieltsliz.com/wp-content/uploads/2015/01/Bar-Chart-Model-1024x612.jpg",
+      "source": "ieltsliz.com",
+      "keywords": [
+        "bar",
+        "chart",
+        "expenditure",
+        "countries",
+        "consumer",
+        "goods",
+        "2010"
+      ]
+    },
+    {
+      "id": "ext-island-map",
+      "label": "Island tourist facilities",
+      "type": "map",
+      "prompt": "The maps below show an island, before and after the construction of some tourist facilities. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+      "imageUrl": "https://ieltsliz.com/wp-content/uploads/2015/01/ielts-map-island.png",
+      "source": "ieltsliz.com",
+      "keywords": [
+        "maps",
+        "island",
+        "tourist",
+        "facilities",
+        "before",
+        "after"
+      ]
+    },
+    {
+      "id": "ext-underground",
+      "label": "Underground railway systems",
+      "type": "table",
+      "prompt": "The table below gives information about the underground railway systems in 6 countries. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+      "imageUrl": "https://ieltsliz.com/wp-content/uploads/2015/01/ielts-table-underground.png",
+      "source": "ieltsliz.com",
+      "keywords": [
+        "table",
+        "underground",
+        "railway",
+        "systems",
+        "countries"
+      ]
+    }
+  ]
+}

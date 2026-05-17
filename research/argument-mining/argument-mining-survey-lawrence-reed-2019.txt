@@ -1,0 +1,1492 @@
+Argument Mining: A Survey
+John Lawrence
+University of Dundee, UK
+Centre for Argument Technology
+j.lawrence@dundee.ac.uk
+Chris Reed
+University of Dundee, UK
+Centre for Argument Technology
+Argument mining is the automatic identiﬁcation and extraction of the structure of inference and
+reasoning expressed as arguments presented in natural language. Understanding argumentative
+structure makes it possible to determine not only what positions people are adopting, but also why
+they hold the opinions they do, providing valuable insights in domains as diverse as ﬁnancial
+market prediction and public relations. This survey explores the techniques that establish the
+foundations for argument mining, provides a review of recent advances in argument mining
+techniques, and discusses the challenges faced in automatically extracting a deeper understand-
+ing of reasoning expressed in language in general.
+1. Introduction
+With online fora increasingly serving as the primary media for argument and debate,
+the automatic processing of such data is rapidly growing in importance. Unfortunately,
+though data science techniques have been extraordinarily successful in many natural
+language processing tasks, existing approaches have struggled to identify more com-
+plex structural relationships between concepts. For example, although opinion mining
+and sentiment analysis provide techniques that are proving to be enormously successful
+in marketing and public relations, and in ﬁnancial market prediction, with the market
+for these technologies currently estimated to be worth around $10 billion, they can only
+tell us what opinions are being expressed and notwhy people hold the opinions they do.
+Justifying opinions by presenting reasons for claims is the domain of argumentation
+theory, which studies arguments in both text and spoken language; in speciﬁc domains
+and in general; with both normative and empirical methodologies; and from philosoph-
+ical, linguistic, cognitive and computational perspectives. Though an enormous ﬁeld
+with a long and distinguished pedigree (see van Eemeren et al. [2014] for a compendious
+review), we begin with an intuitive understanding of argument as reason-giving (and
+reﬁne it later on), and focus initially on how to go about manually identifying arguments
+in the wild.
+Submission received: 2 August 2017; revised version received: 11 August 2019; accepted for publication:
+15 September 2019.
+https://doi.org/10.1162/COLI a 00364
+© 2019 Association for Computational Linguistics
+Published under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International
+(CC BY-NC-ND 4.0) license
+
+Computational Linguistics Volume 45, Number 4
+Argument analysis aims to address this issue by turning unstructured text into
+structured argument data, giving an understanding not just of the individual points
+being made, but of the relationships between them and how they work together to
+support (or undermine) the overall message. Although there is evidence that argu-
+ment analysis aids comprehension of large volumes of data, the manual extraction of
+argument structure is a skilled and time-consuming process. For example, Robert Horn,
+talking about the argument maps he produced on the debate as to whether computers
+can think, quotes a student as saying “These maps would have saved me 500 hours of
+time my ﬁrst year in graduate school”;1 however, Metzinger (1999) notes that over 7,000
+hours of work was required in order for Horn and his team to create these maps.
+Although attempts have been made to increase the speed of manual argument
+analysis, it is clearly impossible to keep up with the rate of data being generated across
+even a small subset of areas and, as such, attention is increasingly turning to argument
+mining,2 the automatic identiﬁcation and extraction of argument components and
+structure. The ﬁeld of argument mining has been expanding rapidly in recent years
+(with ACL workshops on the topic being held annually, from the ﬁrst in 2014,3 up to the
+most recent in 2019, 4 which received a record number of 41 submissions. These have
+been complemented by further workshops organized in Warsaw,5 Dundee,6 Dagstuhl,7
+and tutorials at IJCAI,8 ACL 2016,9 ACL 2019,10 and ESSLLI.11) This increasing activity
+makes a comprehensive review of both timely and practical value.
+Previous reviews, including Palau and Moens (2009) and Peldszus and Stede
+(2013a), predated this explosion in the volume of work in the area, whereas more
+contemporary reviews are aimed at different audiences: Budzynska and Villata (2017) at
+the computational argumentation community and Lippi and Torroni (2016) at a general
+computational science audience. Most recently, Stede and Schneider (2018) have, in
+their 2018 tour de force, assembled an extensive review of performance on tasks in,
+and related to, argument mining. Our goal here is to update and extend, introducing
+reorganization where more recent results suggest different ways of conceptualizing the
+ﬁeld. Our intended audience are those already familiar with computational linguistics,
+so we spend proportionally more time on those parts of the story that may be less
+familiar to such an audience, and rather less on things that represent mainstays of
+modern research in computational linguistics. With this goal in mind we also move
+on from Stede and Schneider (2018) in three ways. First, we bring the discussion up
+to date with the newest results based on approaches such as Integer Linear Program-
+ming, transfer learning, and new attention management methods, and cover a much
+larger range of data sources: For a discipline that is so increasingly data-hungry, we
+review annotated data sources covering over 2.2 million words. Second, we provide
+greater depth in discussion of foundational topics—covering both the rich heritage of
+philosophical research in the analysis and understanding of argumentation, as well as
+those areas and techniques in computational linguistics that lay the groundwork for
+1 http://www.stanford.edu/~rhorn/a/topic/phil/artclTchngPhilosphy.html.
+2 Sometimes also referred to as argumentation mining.
+3 http://www.uncg.edu/cmp/ArgMining2014/.
+4 https://argmining19.webis.de/.
+5 http://argdiap.pl/argdiap2014.
+6 http://www.arg-tech.org/swam2014/.
+7 https://www.dagstuhl.de/en/program/calendar/semhp/?semnr=16161.
+8 http://www.i3s.unice.fr/~villata/tutorialIJCAI2016.html.
+9 http://acl2016tutorial.arg.tech/.
+10 http://arg.tech/~chris/acl2019tut/index.html.
+11 https://www.irit.fr/esslli2017/courses/20.
+766
+
+Lawrence and Reed Argument Mining: A Survey
+much current argument mining work. Thirdly and ﬁnally, the simple pipeline view of
+argument mining, which characterizes a lot of both older research work and reviews,
+is increasingly being superceded by more sophisticated and interconnected techniques;
+here we adopt a more network view of subtasks in argument mining and focus on the
+interconnections and dependencies between them.
+We look ﬁrst, in Section 2, at existing work in areas that form the foundation for
+many of the current approaches to argument mining, including sentiment analysis,
+citation mining, and argumentative zoning. In Section 3 we look at the task of manual
+argument analysis, considering the steps involved and tools available, as well as the
+limitations of manually analyzing large volumes of text. Section 4 discusses the argu-
+mentation data available to those working in the argument mining ﬁeld, as well as the
+limitations and challenges that this data presents. In Section 5, we provide an overview
+of the tasks involved in argument mining before giving a comprehensive overview of
+each in Sections 6, 7, and 8.
+2. Foundational Areas and Techniques
+In this section, we look at a range of different areas that constitute precursors to the
+task of argument mining. Although these areas are somewhat different in their goals
+and approach, they all offer techniques that at least form a useful starting point for
+determining argument structure. We do not aim to present a comprehensive review of
+these techniques in this section, but, instead, to highlight their key features and how
+they relate to the task of argument mining.
+In Section 2.1, we present an overview of opinion mining, focusing speciﬁcally
+on its connection to argument mining. Section 2.2 looks at Controversy Detection, an
+extension of opinion mining that aims to identify topics where opinions are polarized.
+Citation mining, covered in Section 2.3, looks at citation instances in scientiﬁc writing
+and attempts to label them with their rhetorical roles in the discourse. Finally, in
+Section 2.4, we look at argumentative zoning, where scientiﬁc papers are annotated at
+the sentence level with labels that indicate the rhetorical role of the sentence (criticism
+or support for previous work, comparison of methods, results or goals, etc.).
+2.1 Opinion Mining
+As the volume of online user-generated content has increased, so too has the availability
+of a wide range of text offering opinions about different subjects, including product re-
+views, blog posts, and discussion groups. The information contained within this content
+is valuable not only to individuals, but also to companies looking to research customer
+opinion. This demand has resulted in a great deal of development in techniques to
+automatically identify opinions and emotions.
+Opinion mining is “the computational study of opinions, sentiments, and emotions
+expressed in text” (Liu 2010). The terms “opinion mining” and “sentiment analysis”
+are often used interchangeably; however, sentiment analysis is speciﬁcally limited to
+positive and negative views, whereas opinion mining may encompass a broader range
+of opinions.
+The link between sentiment, opinion, and argumentative structure is described in
+Hogenboom et al. (2010), where the role that argumentation plays in expressing and
+promoting an opinion is considered and a framework proposed for incorporating infor-
+mation on argumentation structure into the models for economic sentiment discovery
+767
+
+Computational Linguistics Volume 45, Number 4
+in text. Based on their role in the argumentation structure, text segments are assigned
+different weights relating to their contribution to the overall sentiment. Conclusions,
+for example, are hypothesized to be good summaries of the main message in a text
+and therefore key indicators of sentiment. The interesting point here, from an argument
+mining perspective, is that this theory could equally be reversed and sentiment be used
+as an indicator of the argumentative process found in a text. Taking the example of
+conclusions, those segments that align with the overall sentiment of the document are
+more likely to be a conclusion than those that do not.
+Many applications of sentiment analysis are carried out at the document level to
+determine an overall positive or negative sentiment. For example, in Pang, Lee, and
+Vaithyanathan (2002), topic-based classiﬁcation using the two “topics” of positive and
+negative sentiment is carried out. To perform this task, a range of different machine
+learning techniques (including support vector machines [Cortes and Vapnik 1995],
+maximum entropy, and na¨ıve Bayes [Lewis 1998]) are investigated. Negation tagging
+is also performed using a technique from Das and Chen (2001) whereby the tag NOT_
+is prepended to each of the words between a negation word (“not,” “isn’t,” “didn’t,”
+etc.) and the ﬁrst punctuation mark occurring after the negation word. In terms of
+relative performance, the support vector machines (SVMs) achieved the best results,
+with average 3-fold cross-validation accuracies over 0.82 using the presence of unigrams
+and bigrams as features.
+Shorter spans of text are also considered in Grosse, Ches ˜nevar, and Maguitman
+(2012), who look at microblogging platforms such as Twitter with the aim of mining
+opinions from individual posts to build an “opinion tree” that can be built recursively
+by considering arguments associated with incrementally extended queries. Sentiment
+analysis tools are used to determine the overall sentiment for an initial one word query,
+which is then extended and the change in overall sentiment recalculated. By following
+this procedure, it is possible to see where extending the query results in a change of
+overall sentiment and, as such, to determine those terms that introduce conﬂict with
+the previous query. Conﬂicting elements in an opinion tree are then used to generate
+a “conﬂict tree,” similar to the dialectical trees (Prakken 2005) used traditionally in
+defeasible argumentation (Pollock 1987).
+Opinion mining, however, is not limited to just determining positive and negative
+views. In Kim and Hovy (2006b) sentences from online news media texts are examined
+to determine the topic and proponent of opinions being expressed. The approach uses
+semantic role labeling to attach an opinion holder and topic to an opinion-bearing word
+in each sentence using FrameNet 12 (a lexical database of English, based on manual
+annotation of how words are used in actual texts). To supplement the FrameNet data, a
+clustering technique is used to predict the most probable frame for words that FrameNet
+does not include. This method is split into three subtasks:
+1. Collection of opinion words and opinion-related frames—1,860 adjectives
+and 2,011 verbs classiﬁed into positive, negative, and neutral. Clustering By
+Committee (Pantel 2003) is used to ﬁnd the closest frame. This method uses
+the hypothesis that words that occur in the same context tend to be similar.
+2. Semantic role labeling for those frames. A maximum entropy model is
+used to classify frame element types (Stimulus, Degree, Experiencer, etc.)
+12 https://framenet.icsi.berkeley.edu/.
+768
+
+Lawrence and Reed Argument Mining: A Survey
+3. Mapping of semantic roles to the opinion holder and topic. A manually
+built mapping table maps Frame Elements to a holder or topic.
+Results show an increase from the baseline of 0.30 to 0.67 for verb target words and
+of 0.38 to 0.70 for adjectives, with the identiﬁcation of opinion holders giving a higher
+F-score13 than topic identiﬁcation.
+Although understanding the sentiment of a document as a whole could be a useful
+step in extracting the argument structure, the work carried out on sentiment analysis at a
+ﬁner-grained level perhaps offers greater beneﬁt still. In Wilson, Wiebe, and Hoffmann
+(2005), an approach to phrase-level sentiment analysis is presented, using a two-step
+process: ﬁrst, applying a machine learning algorithm to classify a phrase as either neu-
+tral or polar (for which an accuracy of 0.76 is reported); and then looking at a variety of
+features in order to determine the contextual polarity (positive, negative, both, or neutral)
+of each polar phrase (with an accuracy of 0.62–0.66, depending on the features used).
+In Sobhani, Inkpen, and Matwin (2015), we see an example of extending simple pro
+and con sentiment analysis, to determine the stance which online comments take toward
+an article. Each comment is identiﬁed as “Strongly For,” “For,” “Other,” “Against,” and
+“Strongly Against” the original article. These stances are then linked more clearly to the
+argumentative structure by using a topic model to determine what is being discussed
+in each comment, and classify it to a hierarchical structure of argument topics. This
+combination of stance and topic hints at possible argumentative relations—for example,
+comments about the same topic that have opposing stance classiﬁcations are likely to
+be connected by conﬂict relations, whereas those with similar stance classiﬁcations are
+more likely to connect through support relations.
+In Kim and Hovy (2006a), the link between argument mining and opinion mining is
+clearer still. Instead of looking solely at whether online reviews are positive or negative,
+a system is developed for extracting the reasons why the review is positive or negative.
+Using reviews from epinions.com, which allows a user to give their review as well as
+speciﬁc positive and negative points, these speciﬁc positive and negative phrases were
+ﬁrst collected and then the main review searched for sentences that covered most of the
+words in the phrase. Using this information, sentences were classiﬁed as “pro” or “con”
+with unmatched sentences classiﬁed as “neither.” Sentences from further reviews were
+then classiﬁed as, ﬁrst, “pro” and “con” against “neither” followed by classiﬁcation
+into “pro” or “con.” The best feature selection results in an F-score of 0.71 for reason
+identiﬁcation and 0.61 for reason classiﬁcation.
+2.2 Controversy Detection
+One extension to the ﬁeld of opinion mining that has particular relevance to argument
+mining is controversy detection, where the aim is to identify controversial topics and
+text where conﬂicting points of view are being presented. The most clear link between
+controversy and argument detection can be seen in Boltu ˇzi´c and ˇSnajder (2015), where
+argumentative statements are clustered based on their textual similarity, in order to
+identify prominent arguments in online debates. Controversy detection to date has
+13 F-score refers to the equally weighted harmonic mean of the precision and recall measured for a system.
+When the system is applied to several sets of data, the micro-average F-score is obtained by ﬁrst
+summing up the individual true positives, false positives, and false negatives and then calculating
+precision and recall using these ﬁgures, whereas the macro-average F-score is calculated by averaging the
+precision and recall of the system on the individual sets (van Rijsbergen 1979).
+769
+
+Computational Linguistics Volume 45, Number 4
+largely targeted speciﬁc domains: Kittur et al. (2007), for example, look at the cost
+of conﬂict in producing Wikipedia articles, where conﬂict cost is deﬁned as “excess
+work in the system that does not directly lead to new article content.” Conﬂict revision
+count (CRC), a measure counting the number of revisions in which the “controversial”
+tag was applied to the article, is developed and used to train a machine learning
+model for predicting conﬂict. Computing the CRC for each revision of every article
+on Wikipedia resulted in 1,343 articles for which the CRC score was greater than zero
+(meaning they had at least one “controversial” revision). Of these, 272 articles were
+additionally marked as being controversial in their most recent revision. A selection
+of these 272 articles is then used as training data for an SVM classiﬁer. Features are
+calculated from the speciﬁc page such as the length of the page, how many revisions
+were carried out, links from other articles, and the number of unique editors. Of these
+features, the number of revisions carried out is determined to be the most important
+indicator of conﬂict; and by predicting the CRC scores using a combination of page
+metrics, the classiﬁer is able to account for approximately 90% of the variation in scores.
+It is reasonable to assume that the topics covered on those pages with a high CRC are
+controversial and, therefore, topics for which more complex argument is likely to occur.
+The scope of controversy detection is broadened slightly in Choi, Jung, and Myaeng
+(2010) and Awadallah, Ramanath, and Weikum (2012), who both look at identifying
+controversy in news articles. In Choi, Jung, and Myaeng (2010), a controversial issue is
+deﬁned as “a concept that invokes conﬂicting sentiments or views” and a subtopic as
+“a reason or factor that gives a particular sentiment or view to the issue.” A method is
+proposed for the detection of controversial issues, based on the magnitude of sentiment
+information and the difference between the magnitudes for two different polarities.
+First, noun and verb phrases are identiﬁed as candidate issues using a mixture of
+sentiment models and topical information. The degree of controversy for these issues
+is calculated by measuring the volume of both positive and negative sentiment and
+the difference between them. For subtopic extraction, noun phrases are identiﬁed
+as candidates and, for these phrases, three statistical features (contextual similarity
+between the issue and a subtopic candidate, relatedness of a subtopic to sentiment, and
+the degree of physical vicinity between the issue and the candidate phrases) as well as
+two positional features are calculated. The results for subtopic identiﬁcation are poor,
+with an F-score of 0.50; however, identifying controversial issues is considerably more
+successful, with a precision of 0.83.14
+Awadallah, Ramanath, and Weikum (2012) present the OpinioNetIt system, which
+aims to automatically derive a map of the opinions-people network from news and
+other Web documents. The network is constructed in four stages. First, generic terms
+are used to identify sample controversial topics; next, opinion holders are identiﬁed for
+each topic, and their opinions extracted; the acquired topics and opinion holders are
+then used to construct a lexicon of phrases indicating support or opposition. Finally,
+this process is performed iteratively using the richer lexicon to identify more opinion
+holders, opinions, and topics. Using this approach a precision of 0.72 is achieved in
+classifying controversial opinions.
+Despite the specific domain limitations of this controversy detection work, Dori-Hacohen
+and Allan (2013) extend their scope to detecting controversy on the Web as a whole,
+enabling users to be informed of controversial issues and alerted when alternative
+14 The precision is calculated based upon a user study where the participants are asked to conﬁrm if an
+issue is controversial; as such, recall is not reported.
+770
+
+Lawrence and Reed Argument Mining: A Survey
+viewpoints are available. This is achieved by ﬁrst mapping a given Web page to a set of
+neighboring Wikipedia articles labeled on a controversiality metric, then combining the
+labels to give an estimate of the page’s controversiality, which is ﬁnally converted into
+a binary value using a threshold. This approach gives a 22% increase in accuracy over
+a sentiment-based approach, indicating that, although closely related, detecting contro-
+versy is more complex than simply detecting opinions and looking at where they differ.
+Such widespread use of controversy detection offers the ability to address potential
+hotspot issues as they arise and the possibility of dealing with conﬂict in a debate at
+an early stage, before the quality of discussion can be negatively impacted. Rumshisky
+et al. (2017), for example, take advantage of both content- and graph-based features
+to analyze the dynamics of social or political conﬂict as it develops over time, using
+a combination of measures of conﬂict intensity derived from social media data.
+Such methods for determining controversial issues can play a signiﬁcant role in
+determining the argumentative structure inherent in a piece of text. Those points that
+are controversial are likely to attract not only more attention, but also a more even
+mix of supporting and attacking views, than those on which there is broad consensus.
+Lawrence et al. (2017) make this connection explicit, showing how the divisiveness,
+or controversiality, of a proposition might be based upon the relative number of its
+supports and conﬂicts. A proposition with many of both might be taken to be divisive,
+whereas few of either might suggest only limited divisiveness. Alternatively, given a
+pair of propositions that are in conﬂict, the divisiveness of this conﬂict is shown to be a
+measure of the amount of support on both sides. It is easy to see how this process could
+be reversed, meaning that if we are able to identify controversial points in a piece of
+text, we already know something about the argumentative structure.
+2.3 Citation Mining
+Citation mining involves the labeling of citation instances in scientiﬁc writing with
+their rhetorical roles in the discourse. The techniques used to automatically determine
+the motivating factors behind each citation map closely to applications in argument
+mining, where text spans are labeled based on their argumentative role. For example,
+if a citation is being used to highlight a gap or deﬁciency in the referenced work, then
+the language used will be suggestive of conﬂict relations between the two; if a citation
+is being used to back up the current work, then there are likely argumentative support
+relations between the two.
+There are a broad range of manual schemes for classifying citation motivation
+and citation function (the reason why an author chooses to cite a paper), and Teufel,
+Siddharthan, and Tidhar (2006) look at how this classiﬁcation can be automated. A clas-
+siﬁcation scheme is ﬁrst developed using guidelines for twelve different categories (ex-
+plicit statement of weakness, four types of contrast/comparison, six types of agreement/
+usage, and neutral). Human annotators testing this scheme achieve a κ15 of 0.72 and,
+when implemented as an automatic procedure with the features listed below, an accu-
+racy of 0.77 and κ of 0.57 is achieved (or accuracy 0.83, κ 0.58 for 3-way classiﬁcation
+15 κ is a statistical measure of inter-rater agreement, measuring pairwise agreement among a set of coders
+and correcting for expected chance agreement (Carletta 1996). An interpretation of kappa values is
+offered by Landis and Koch (1977), who describe values between 0.01 and 0.20 as showing slight
+agreement, 0.21 and 0.40 fair agreement, 0.41 and 0.60 moderate agreement, 0.61 and 0.80 substantial
+agreement, and 0.81 and 1.00 almost perfect agreement.
+771
+
+Computational Linguistics Volume 45, Number 4
+positive/negative/neutral) based on an evaluation corpus of 116 articles, containing
+2,829 citations.
+• Cue phrases
+• Cues identiﬁed by annotators: 892 cue phrases identiﬁed by annotators
+(around 75 per category)
+• Verb tense and voice used for recognizing statements of
+previous/future/current work
+• Location in paper/sentence/paragraph
+• Self citations identiﬁed by author name
+Kappa is even higher for the top-level distinction; collapsing the similar categories
+into just four (statement of weakness, contrast/comparison, agreement/usage, and neu-
+tral) gives aκ value of 0.59. By comparison, the human agreement for this conﬁguration
+isκ = 0.76. Although this leaves a signiﬁcant gap between automated and human perfor-
+mance, it nevertheless suggests “moderate agreement” using the automated approach,
+an encouraging result for a complex task.
+An attempt to classify the opinion an author holds toward a work that they cite
+(for example, positive/negative attitudes or approval/disapproval) is presented in Piao
+et al. (2007), where semantic lexical resources and NLP tools are used to create a network
+of opinion polarity relations. Sentences containing citations are extracted ﬁrst, before
+determining the opinion orientation of the subjective words in the context of the citation.
+From these opinion orientations, the attitude of the author toward the work that they
+are citing is labeled.
+Athar (2011) takes a similar approach, whereby analysis is performed on a corpus
+of scientiﬁc texts taken from the ACL Anthology, and consisting of 8,736 citations
+from 310 research papers manually annotated for their sentiment. Sentences are la-
+beled as positive, negative, or objective, with 1,472 used for development and training.
+Each citation is represented as a feature set in a SVM and processed using WEKA
+(Holmes, Donkin, and Witten 1994) and the WEKA LibSVM library with the following
+features:
+• Word Level Features Unigrams and bigrams as well as 3-grams to capture
+longer technical terms. POS tags are also included using two approaches:
+attaching the tag to the word by a delimiter, and appending all tags at the
+end of the sentence. A science-speciﬁc sentiment lexicon is also added,
+consisting of 83 polar phrases such as efﬁcient, popular, successful,
+state-of-the-art, and effective.
+• Contextual Polarity Features Sentence-based features, for example,
+presence of subjectivity clues that have been compiled from several
+sources along with the number of adjectives, adverbs, pronouns, modals,
+and cardinals.
+• Dependency Structures Typed dependency structures (De Marneffe and
+Manning 2008) describing the grammatical relationships between words.
+For instance, in the sentence “CITE showed that the results for
+French-English were competitive to state-of-the-art alignment systems,”
+772
+
+Lawrence and Reed Argument Mining: A Survey
+the relationship between results and competitive will be missed by
+trigrams but the dependency representation captures it in a single feature
+nsubj competitive results.
+• Sentence Splitting Each sentence is split by trimming its parse tree.
+Walking from the citation node toward the root, the subtree rooted at the
+ﬁrst sentence node is selected and the rest ignored.
+• Negation All words inside a k-word window of any negation term are
+sufﬁxed with a token_neg to distinguish them from their non-polar
+versions.
+The results show that 3-grams and dependencies perform best in this task with
+macro F-score 0.76 and micro F-score 0.89.
+2.4 Argumentative Zoning
+Argumentative zoning (AZ) is the classiﬁcation of sentences by their rhetorical and
+argumentative role within a scientiﬁc paper. For example, criticism or support for
+previous work, comparison of methods, and results or goals. Although this approach
+of labeling a sentence by its role is slightly removed from the goal of identifying the
+argumentation structure contained within the document, it is clear that the information
+obtained by AZ provides a useful step toward determining the structure.
+In Teufel, Siddharthan, and Batchelor (2009), an annotation scheme covering 14
+possible roles is used to classify sentences into mutually exclusive categories. These
+categories extend the original seven categories presented in Teufel, Carletta, and Moens
+(1999) and are designed to be applied to material from the life sciences domain as
+well as to the Computational Linguistics (CL) material considered in the earlier work.
+This categorization highlights the link between AZ and argument mining. The ‘AIM’
+(statement of speciﬁc research goal, or hypothesis of current paper) and ‘OWN CONC’
+(ﬁndings, conclusions (non-measurable) of own work) categories, for example, are
+suggestive of conclusions. ‘NOV ADV’ (novelty or advantage of own approach) and
+‘SUPPORT’ (other work supports current work or is supported by current work) are
+suggestive of support relations, and ‘GAP WEAK’ (lack of solution in ﬁeld, problem
+with other solutions) and ‘ANTISUPP’ (clash with somebody else’s results or theory)
+are suggestive of conﬂict relations.
+Teufel et al. use a domain expert to encode basic knowledge about the subject,
+such as terminology and domain speciﬁc rules for individual categories, as part of the
+annotation guidelines. The produced guidelines include a decision tree, descriptions
+of the semantic nature of each category, rules for pairwise distinction of the categories,
+and a large range of examples taken from both chemistry and computational linguistics.
+Human coders with background knowledge in computational linguistics, and varied
+experience in chemistry, applied these guidelines, achieving inter-annotator agree-
+ment for chemistry with κ = 0.71 (N =3745, n =15, k =3). For CL, the inter-annotator
+agreement was κ = 0.65 (N =1629, n =15, k =3). As a comparison, the inter-annotator
+agreement for Teufel’s original, CL-speciﬁc AZ with seven categories (Teufel, Carletta,
+and Moens 1999) was κ = 0.71 (N=3420, n=7, k=3). This level of agreement between
+the three annotators is acceptable overall and supports the hypothesis that the task
+deﬁnition is domain-knowledge free. However, agreements involving the semi-expert
+are higher than the agreement between expert and non-expert, indicating that a general
+773
+
+Computational Linguistics Volume 45, Number 4
+understanding of basic chemistry was not sufﬁciently adequate to ensure that the non-
+expert understood enough of the material to achieve the highest-possible agreement.
+Merity, Murphy, and Curran (2009) present a maximum entropy classiﬁer with each
+sentence of an article classiﬁed into one of the seven basic rhetorical structures from
+Teufel, Carletta, and Moens (1999). A maximum entropy model combined with the
+addition of new features to those used by Teufel et al. gives an increase from 0.76 to
+0.97 F-score on Teufel’s Computational Linguistics conference paper corpus (48 computa-
+tional linguistics papers, taken from the proceedings of the COLING, ANLP , and ACL
+conferences between April 1994 and April 1995). The features used are described below:
+• Unigrams, bigrams, and n-grams Unigram and bigram features were
+included and reported individually and together (as n-grams). These
+features include all of the unigrams and bigrams above the feature cutoff.
+• First The ﬁrst four words of a sentence, added individually.
+• Section A section counter that increments on each heading to measure the
+distance into the document.
+• Location The position of a sentence between two headings (representing a
+section).
+• Paragraph The position of the sentence within a paragraph.
+• Length Length of sentence grouped into multiples of 3.
+• Teufel et al.’s (1999) featuresTo compare with previous work, most of the
+features that gave Teufel et al. the best performance are also implemented.
+• Feature cutoff Instead of including every possible feature, a cutoff was
+used to remove features that occur less than four times.
+• History features History features were used and AZ treated as a sequence
+labeling task with history lengths ranging from previous label to the
+previous four labels.
+The results show that n-grams have by far the largest impact, with a 21.39% reduc-
+tion in accuracy when they are removed (the next largest impact being 1.24% for the
+ﬁrst four words of the sentence). The history features also have an impact of just over
+1%. It is shown that none of Teufel et al.’s individual features alone make a substantial
+contribution to the results when using the maximum entropy model. To evaluate the
+wider applicability of AZ, a corpus of Astronomy journal articles was also annotated
+with a modiﬁed zone and content scheme, and a similar level of performance (around
+0.96 accuracy) was achieved.
+3. Manual Argument Analysis
+In this section we look at the task of manual argument analysis, considering the steps
+involved and tools available, as well as the limitations of manually analyzing large
+volumes of text. Understanding manual analysis can offer unique insight into how this
+task can be automated and provides a valuable insight into how an analyst unpicks the
+complex argumentative relationships represented in natural language texts.
+Although the argumentative structure contained within a piece of text (van
+Eemeren et al. 2014) can be diagrammed manually using pen and paper or simple
+774
+
+Lawrence and Reed Argument Mining: A Survey
+graphics software, a wide range of speciﬁc argument diagramming tools (Scheuer et al.
+2010) has been developed to allow an analyst to identify the argumentative sections of
+the text and diagram the structure that they represent (Kirschner, Buckingham-Shum,
+and Carr 2003; Okada, Shum, and Sherborne 2008). The advantages of this approach, as
+opposed to the use of non-specialized software, are discussed in Harrell (2005), though
+there is varied (and conﬂicting evidence of) impact on the the day-to-day activity within
+domains in which these tools are applied, such as law, pedagogy, scientiﬁc writing
+(Lauscher, Glavaˇs, and Eckert 2018; Lauscher, Glava ˇs, and Ponzetto 2018), and design
+(Scheuer et al. 2010). The majority of these tools, such as Araucaria (Reed and Rowe
+2004), Rationale (van Gelder 2007), OVA (Bex et al. 2013), and Carneades (Gordon,
+Prakken, and Walton 2007), require the analyst to manually identify the propositions
+involved in the argument being made and then connect them identifying the premises
+and conclusion. In many cases, this simple structure can then be extended with more
+specialized information, depending on the nature of the analysis task being performed;
+for example, giving details of the argumentation schemes (Walton, Reed, and Macagno
+2008) used or details of the participants and their dialogical moves (for example, ques-
+tioning or asserting) when analyzing dialogue.
+Generally, manual argument analysis, as carried out using the tools previously
+mentioned, can be split into four distinct stages, as shown in Figure 1.
+Though both manual and automated analysis techniques may develop a more
+complex, hybrid approach in practice, the pipeline model presented here offers a good
+starting point from which to introduce the range of techniques currently available.
+Then in Section 5 we further dissect these steps, presenting a more detailed view of
+the individual argument mining steps and how they relate to the manual annotation
+process, explaining how increasingly the pipeline view oversimpliﬁes complex interde-
+pendencies.
+3.1 Text Segmentation
+Text segmentation involves the extraction of the fragments of text from the original
+piece that will form the constituent parts of the resulting argument structure. Text
+segmentation can be considered as the identiﬁcation of a form of elementary discourse
+Text segmentation
+Argument /
+Non-Argument
+Simple Structure
+Reﬁned Structure
+Figure 1
+Steps in argument analysis.
+775
+
+Computational Linguistics Volume 45, Number 4
+units (EDUs). Though there are competing hypotheses about what constitutes an EDU
+(for example, Grimes [1975] and Giv´on [1983] view them as clauses, whereas Hirschberg
+and Litman [1993] view them as prosodic units, Sacks, Schegloff, and Jefferson [1974]
+as turns of talk, Polanyi [1988] as sentences, and Grosz and Sidner [1986] as intentionally
+deﬁned discourse segments), all agree that EDUs are non-overlapping spans of
+text corresponding to the atomic units of discourse. Peldszus and Stede (2013a) refer
+to these argument segments as “argumentative discourse units” (ADUs), and deﬁne an
+ADU as a “minimal unit of analysis,” pointing out that an ADU may not always be as
+small as an EDU, for example, “when two EDUs are joined by some coherence relation
+that is irrelevant for argumentation, the resulting complex might be the better ADU”
+(page 20).
+Generally speaking, in argument analysis, the sections that the analyst extracts
+correspond to the propositions contained within the text; however, some knowledge of
+the argument being made is often required in order to determine the exact boundaries of
+these propositions and how ﬁne-grained the segmentation needs to be. In some cases,
+for example, propositional content can occur nested in reported speech, such as the
+sentence “Simon said this is a blue pen.” The rest of the argument structure may refer
+to either the whole sentence (“Simon didn’t say that”), to the statement “this is a blue
+pen” (“it’s clearly a black pen”), or to both parts separately (“Yes, I heard Simon say
+that, but he’s wrong, it’s a black pen”). Another challenging example is dislocation
+which, similar to cleft constructions in syntax (Lasnik and Uriagereka 1988), occurs
+when one segment is embedded into another, such as the example given in Saint-Dizier
+(2012): “Products X and Y because of their toxicity are not allowed in this building.” In
+this case the conclusion, “Products X and Y are not allowed in this building,” is split
+around the premise “because of their toxicity.” As these examples show, robustly iden-
+tifying the text segments required for an analysis can be challenging even for a human
+analyst.
+An additional complication can occur in cases where some reconstruction of the
+argument is required in order to identify the points being made. There is a tendency for
+arguers to leave implicit an assumption required in order for their conclusion to follow
+from their premises. This can often occur when the omitted proposition is believed to
+be obvious; however, it can also happen for a range of other reasons, for example, to
+increase the rhetorical force of the argument, or to conceal its unsoundness. Such miss-
+ing premises are referred to asenthymemes (Hitchcock 1985), and can cause difﬁculties
+for both automatic and manual segmentation due to the requirement of knowledge that
+may be outside the scope of that expressed in the text.
+3.2 Argument / Non-Argument Classiﬁcation
+This step involves determining which of the segments previously identiﬁed are
+part of the argument being presented and which are not. For most manual analysis
+tools this step is performed as an integral part of segmentation: The analyst simply
+avoids segmenting any parts of the text that are not relevant to the argument. How-
+ever, in some cases, for example, where segmentation has been performed auto-
+matically or by a different analyst, this step must be carried out independently. In
+these cases the judgment as to whether a particular segment is argumentative can be
+made as a preliminary step in determining the structure, or left until the end of the
+analysis, when any segments left unconnected to the rest of the structure can simply be
+discarded.
+776
+
+Lawrence and Reed Argument Mining: A Survey
+Looking at the text shown in Example (1), we can see that the majority of Michael
+Buerk’s introduction of Nick Dearden is non-argumentative, with only the single claim
+identiﬁed that Mr Dearden would like people not to have to pay their debts. Meanwhile,
+almost the entirety of the response (excluding brief connectives) forms part of the
+argument structure.
+Michael Buerk: John Lamiday, thank you very much indeed for joining us this evening.
+Our third witness is Nick Dearden, who is director of the Jubilee Debt Campaign.
+Mr Dearden, you’d like people not to have to pay their debts. Where’s the morality in that?
+Nick Dearden: I wouldn’t like people not to have to pay their debts across the board. But I
+think what we say is that this isn’t simply a matter of individual morality.
+Debt is used time and again as a set of economic decisions, and political decisions, to
+achieve certain things in society. And very often what high levels of debt can mean, and
+especially when the debt is on very unjust terms, is a massive redistribution of wealth
+in society, from the poorest to the richest.
+Example (1) Excerpt from the BBC Moral Maze ‘Money’ corpus ( http://corpora.
+aifdb.org/Money). Argumentative segments are highlighted.
+In some cases, however, this task can be remarkably demanding. Letters to the
+Editor contributions, for example, can sometimes offer rich pickings for the argument
+analyst, but such letters can often be little more than frivolity or wit masquerading as
+argument and inference. Distinguishing argument from non-argument in this domain
+is extremely demanding, even for a highly trained human analyst.
+3.3 Simple Structure
+Once the elements of the argument have been determined, the next step is to examine
+the links between them. This can be as simple as noting segments that are thematically
+related, but usually involves the identiﬁcation of support and attack relations between
+segments. Although these relations can be simply labeled pairs, it is common to
+consider the varying ways in which components can work together (Groarke, Tindale,
+and Fisher 1997):
+Convergent Arguments In a convergent argument, multiple
+premises are used to independently support a single conclusion.
+In this case the premises act on their own and the removal of
+one premise from the argument does not weaken the others. From
+Example (1) we can see that “what we say is that this isn’t simply
+a matter of individual morality” and “I wouldn’t like people not to
+have to pay their debts across the board” independently support “Mr
+Dearden would like people not to have to pay their debts.”
+Linked Arguments In a linked argument, multiple premises work
+together to support a conclusion. The important point here is that
+each premise requires the others in order to work fully. In Example 1,
+the statements “Debt is used time and again as a set of economic
+decisions, and political decisions, to achieve certain things in society”
+and “very often what high levels of debt can mean, and especially
+when the debt is on very unjust terms, is a massive redistribution
+777
+
+Computational Linguistics Volume 45, Number 4
+of wealth in society, from the poorest to the richest” work together to support
+the point “what we say is that this isn’t simply a matter of individual morality.”
+Divergent Arguments In some cases the same premise may sup-
+port multiple conclusions. Divergent arguments are somewhat less
+common and, as such, are not supported by those analysis tools which,
+for example, are limited to analyzing arguments in a tree structure.
+Though Example (1) does not include a divergent argument, Dearden might have
+said, “And if it’s not individual morality, then the state should take some of the
+responsibility,” which would have offered a second conclusion based on the premise
+of individual morality.
+Sequential (or Serial) Arguments The ﬁnal way in which multi-
+ple premises can support a conclusion is in a sequential argument.
+In this case, one premise leads to another and this, in turn, leads
+to the conclusion. In Example (1), the statements “very often what
+high levels of debt can mean, and especially when the debt is on very
+unjust terms, is a massive redistribution of wealth in society, from the
+poorest to the richest,” “what we say is that this isn’t simply a matter
+of individual morality,” and “Mr Dearden would like people not to
+have to pay their debts” follow a sequential structure.
+Hybrid Argument Structure More complicated arguments, such as that in
+Example (1), usually involve several instances and combinations of the above elements
+into a larger, hybrid, argument structure. The complete analyzed structure of Example
+(1) can be seen in Figure 2. We must also consider conﬂict, or attack, relations between
+propositions. These include both standard conﬂict relations where one proposition
+directly conﬂicts with another, as well as more complex forms of defeating an argument
+(Pollock 1986):
+Rebutting Attacks Rebutting arguments express a position that is directly incom-
+patible with a conclusion (Pollock 1986, page 38). Later in the debate from which
+Example (1) is drawn, an opponent, Michael Portillo, says, “People who lend money,
+that is to say, people who save money, say through building societies, are very ordinary
+Figure 2
+Simple argument structure of the text in Example (1).
+778
+
+Lawrence and Reed Argument Mining: A Survey
+people.” This offers a direct, rebutting attack to Dearden’s conclusion, expressed in
+Example (1), that debt is a massive redistribution of wealth from the poorest to the
+richest.
+Undercutting Attacks Undercutting arguments attack or conﬂict with the inference
+between a premise and a conclusion, and, as such, offer a reason for no longer believing
+the conclusion, rather than for believing the negation of the conclusion (Pollock 1986,
+page 39). Though the fragment of debate from which Example (1) is drawn does not
+offer clear examples of undercutting, Portillo might have retorted with, “If there were
+politicial decisions being taken, they are being taken by elected ofﬁcers—so state actions
+don’t require more than individual morality.” Such an attack does not directly counter
+the conclusion, but instead focuses on the robustness of the passage from premise to
+conclusion.
+Although this approach to identifying argument structure is by far the most com-
+mon, other methodologies, such as Toulmin (1958) are also widely used; perhaps the
+clearest synthesis for computational purposes is presented by the philosopher J. B.
+Freeman (Freeman 1991, 2011). For argument mining, successful extraction of argu-
+ment structure in one form can often be translated, modulo expressivity constraints,
+into others (we discuss different argument representations and formats as well as the
+translation between them in 4).
+3.4 Reﬁned Structure
+Having determined the basic argumentative structure, some analysis tools allow this
+to be reﬁned further. For example, Araucaria, Carneades, Rationale, and OVA allow
+the analyst to identify the argumentation scheme related to a particular structure.
+Argumentation schemes are patterns of inference, connecting a set of premises to a
+conclusion, that represent stereotypical patterns of human reasoning. Such schemes
+were originally viewed as rhetorical methods by which a speaker could inﬂuence their
+audience; later, they have also been adopted as a way to distinguish good arguments
+from bad. Argumentation schemes can thus be seen as a historical descendant of the
+topics of Aristotle (1958), and, much like Aristotle’s topics, play a valuable role in both
+the construction and evaluation of arguments. Arguments are evaluated based on a set
+of critical questions corresponding to the scheme which, if not answered adequately,
+result in the argument to which the scheme corresponds defaulting.
+The Argument from Expert Opinion scheme (Walton 1996) is commonly used to
+illustrate the concept:
+Major Premise: Source E is an expert in subject domain S containing proposition A.
+Minor Premise: E asserts that proposition A is true (false).
+Conclusion: A is true (false).
+with the associated critical questions:
+1. Expertise Question: How credible is E as an expert source?
+2. Field Question: Is E an expert in the ﬁeld F that A is in?
+3. Opinion Question: What did E assert that implies A?
+4. Trustworthiness Question: Is E personally reliable as a source?
+5. Consistency Question: Is A consistent with what other experts assert?
+6. Backup Evidence Question: Is E’s assertion based on evidence?
+779
+
+Computational Linguistics Volume 45, Number 4
+Recent study has resulted in the identiﬁcation and analysis of the most important
+and commonly used schematic structures (Hastings 1963; Perelman and Olbrechts-
+Tyteca 1969; Kienpointer 1992; Pollock 1995; Walton 1996; Grennan 1997; Katzav and
+Reed 2004; Walton, Reed, and Macagno 2008). Although there is much overlap in these
+classiﬁcations, they often differ in their granularity: Pollock identiﬁes fewer than 10
+schemes; Walton, nearly 30; Grennan, more than 50; and Katvaz and Reed, more than
+100. Due to these differences, it is common for analysis tools to retain the grouping of
+schemes into sets. Araucaria, for example, supports the Walton, Grennan, Perelman and
+Olbrechts-Tyteca, Katzav and Reed, and Pollock scheme sets.
+Experiments on the annotation of Walton schemes by annotators with a strong back-
+ground in linguistics but who were provided with only the description of the schemes
+given in Walton, Reed, and Macagno (2008) have shown that this is an exceptionally
+difﬁcult task, with results differing in both numbers of arguments annotated and the
+distributions of units (Lindahl, Borin, and Rouces 2019). However, recent developments
+in annotation guidelines for these schemes, including the decision tree–based method
+described in Lawrence, Visser, and Reed (2019), suggest that this situation can be im-
+proved and offer hope for the construction of scheme annotated corpora.
+3.5 Limitations of Manual Analysis
+Although these tools can be used for the analysis of small sections of text, analyzing
+large volumes of text quickly, and certainly in anything approaching real time, is beyond
+their scope. Compendium 16 IBIS map facilitators are the closest, but the analysis in-
+volved is at a much higher level. The major limitation is the amount of information that
+can be handled by a single analyst. Efforts have been made to overcome this obstacle by
+both crowdsourcing of annotation (Ghosh et al. 2014) and using hardware designed
+to allow multiple trained annotators to collaborate on the same analysis (Bex et al.
+2013). In the ﬁrst case, by applying a clustering technique to identify which pieces of
+text were easier or harder for trained experts to annotate, it was determined that the
+crowdsourced results were only accurate for those segments that were identiﬁed as
+being easier for expert annotators. In the second case, although the AnalysisWall (a
+touchscreen measuring 11 feet by 7 feet running bespoke analysis software) has been
+used to analyze several hour-long radio programs in real time, it still does not come
+close to allowing for the analysis of the vast volumes of data produced every day.
+4. Argument Data
+One of the challenges faced by current approaches to argument mining is the lack of
+large quantities of appropriately annotated arguments to serve as training and test
+data. Several recent efforts have been made to improve this situation by the creation
+of corpora across a range of different domains.
+For example, Green (2014) aims to create a freely available corpus of open-access,
+full-text scientiﬁc articles from the biomedical genetics research literature, annotated
+to support argument mining research. However, there are challenges to creating such
+corpora, such as the extensive use of biological, chemical, and clinical terminology in the
+BioNLP domain. These challenges are highlighted in Green (2015), where preliminary
+16 http://compendium.open.ac.uk/.
+780
+
+Lawrence and Reed Argument Mining: A Survey
+work on guidelines for the manual identiﬁcation of 10 custom argumentation schemes
+targeted at genetics research articles is presented. For example, one of the schemes
+presented, Failed to Observe Effect of Hypothesized Cause, looks for situations where
+speciﬁc properties were not observed, and where it is assumed that a speciﬁc condition
+that would result in those properties is present, leading to the conclusion that the condi-
+tion may not be present. Twenty-three students were assessed on their ability to identify
+instances of these schemes after having read the guidelines, and the results show a mean
+accuracy of only 49%. It can be seen from these results that the classiﬁcation of such
+nuanced argument schemes is not a straightforward task. This suggests the need for
+both more rigorous scheme deﬁnitions, with particular attention given to error analysis
+of those schemes that are commonly confused, as well as the development of guidelines
+taking these issues into account.
+In Houngbo and Mercer (2014), a straightforward feature of co-referring text—
+presence of the lexeme, “this”—is used to build a self-annotating corpus extracted
+from a large biomedical research paper data set. This is achieved by collecting pairs
+of sequential sentences where the second sentence begins with “This method. . . ,” “This
+result. . . ,” or “This conclusion. . . ,” and then categorizing the ﬁrst sentence in each pair
+respectively as Method, Result, or Conclusion sentences. In order to remove outliers
+in the data set, a multinomial na ¨ıve Bayes classiﬁer was trained to classify sentences
+from the corpus, and sentences that were classiﬁed with less than 98% conﬁdence were
+removed. This reduced corpus was then used as training data to identify Method,
+Result, and Conclusion sentences using both SVM and na ¨ıve Bayes classiﬁers. These
+classiﬁers show an average F-score of 0.97 with na ¨ıve Bayes and 0.99 with SVM, and
+are further tested on the corpus used by Agarwal and Yu (2009), where sentences are
+classiﬁed in the same way. By using this approach, Houngbo and Mercer are able to
+improve on the results from Agarwal and Yu, whose results show an F-score of 0.92
+using 10-fold cross-validation. Despite the limited nature of this task, only identifying
+speciﬁc types of sentences and not giving any idea of the relations between them, these
+results show that by extending the training data available, substantial improvements in
+classifying sentences can be made.
+Lawrence and Reed (2017) take a similar approach to Houngbo and Mercer, using
+discourse indicators (connectives such as “because,” “however,” etc.) in place of “this.”
+In this work, the topic of a given text is ﬁrst identiﬁed and a Web search carried out to
+retrieve related documents. Sentences containing discourse indicators showing support
+relations are then found within the retrieved documents and these sentences are split
+on either side of the indicator to give possible premise conclusion pairs. Despite this
+being a noisy data set, with potential off-topic sentences and cases where the indicator
+has been used for a different reason, it is shown that a topic model can be built from
+large numbers of these pairs, resulting in stereotypical patterns of support on the given
+topic.
+Similarly, Habernal and Gurevych (2015) use large volumes of unlabeled data from
+online debate portals. By identifying clusters of both sentences and posts from these
+debate portals that contain similar phrases, and then ﬁnding the centroids of these clus-
+ters, “prototypical arguments” are identiﬁed. Al-Khatib et al. (2016) likewise leverage
+online debate portals, generating annotations by automatically mapping source data,
+in this case the labeled text components from the idebate.org (e.g., “Introduction,”
+“point,” “counterpoint”), to a set of predeﬁned class labels to create a large corpus with
+argumentative and non-argumentative text segments from several domains.
+The Argument Annotated Essays Corpus (AAEC), presented in Stab and Gurevych
+(2014a) and updated in Stab and Gurevych (2017), consists of argument-annotated
+781
+
+Computational Linguistics Volume 45, Number 4
+persuasive essays, and features topic and stance identiﬁcation, annotation of argument
+components, and argumentative relations. Drawn from 402 English language essays,
+the ﬁnal corpus contains 751 major claims, 1,506 claims, and 3,832 premises, connected
+by 3,613 support and 219 attack relations. A random sample of 102 essays taken from
+the AAEC have been further annotated, as described in Carlile et al. (2018), to also
+include a persuasiveness score for each argument as well as scores for attributes that
+potentially impact persuasiveness (Eloquence, Speciﬁcity, Relevance, and Evidence),
+the means of persuasion (Ethos, Pathos, or Logos), and the types of both claims and
+premises. This addition to AAEC has already shown potential in developing automated
+persuasiveness scoring for essays (Ke et al. 2018) and, similarly, such annotations of Ethos,
+Pathos, or Logos as found in the AAEC have been shown to closely reﬂect the persuasive
+strength of arguments (Duthie, Budzynska, and Reed 2016; Wachsmuth et al. 2018).
+Kirschner, Eckle-Kohler, and Gurevych (2015) present a corpus of 24 German lan-
+guage articles, which were selected from the education research domain, and annotated
+using a custom designed tool (DiGAT). The annotation scheme used identiﬁes binary
+relations between argument components, which in this work correspond to sentences
+from the original texts. Four types of relation are identiﬁed: support, attack, detail, and
+sequence. The ﬁrst two of these relations are argumentative, whereas the latter two
+are discourse relations similar to the sequence and background relations of Rhetorical
+Structure Theory (Mann and Thompson 1987). The results of annotation using this
+scheme are represented as graph structures, and a range of methods to determine inter
+annotator agreement for these structures are considered. Despite the complexity of the
+articles being analyzed, the results show multi-κ values up to 0.63. Although this result
+is fair for such a complex annotation task, several speciﬁc areas are identiﬁed that reduce
+agreement. Similar categories were particularly problematic; for example, in many
+cases disagreement was due to confusion between support and detail or support and
+sequence relation. Although these differences could potentially be improved by more
+detailed annotation guidelines, the authors argue that in many cases several correct
+solutions exist, with both labelings being correct.
+Legal texts are the focus of Walker, Vazirova, and Sanford (2014), where a type
+system is developed for marking up successful and unsuccessful patterns of argument
+in U.S. judicial decisions. Building on a corpus of vaccine-injury compensation cases
+that report factﬁnding about causation, based on both scientiﬁc and non-scientiﬁc ev-
+idence and reasoning, patterns of reasoning are identiﬁed and used to illustrate the
+difﬁculty of developing a type or annotation system for characterizing these patterns. A
+further example of legal material is the ECHR corpus (Mochales and Ieven 2009), a set of
+documents extracted from legal texts of the European Court of Human Rights (ECHR).
+The ECHR material, although not annotated speciﬁcally for argumentative content,
+contains a standard type of reasoning and structure of argumentation that means that
+the corpus can be easily adapted to serve as data for argument mining.
+A different domain is considered in Kiesel et al. (2015), who present a corpus of
+200 newspaper editorials annotated for their argumentative structure. The annotation is
+based on a model consisting of explicit argumentative units, and the implicit argumen-
+tative relations (i.e., support or attack) between them. In this case, an argumentative unit
+is understood to be a segment of the original text containing at least one proposition.
+Argumentative relations are considered as the links from one unit to the unit that it most
+directly supports or attacks.
+The Internet Argument Corpus (IAC) (Walker et al. 2012) is a corpus for research
+in political debate on Internet forums. It consists of approximately 11,000 discussions,
+390,000 posts, and some 73,000,000 words. Subsets of the data have been annotated
+782
+
+Lawrence and Reed Argument Mining: A Survey
+for topic, stance, agreement, sarcasm, and nastiness, among others. The IAC is further
+developed in the IAC version 2 (Abbott et al. 2016), a collection of corpora for research
+in political debate on Internet forums. It consists of three data sets: 4forums (414K
+posts), ConvinceMe (65K posts), and a sample from CreateDebate (3K posts). It includes
+topic annotations, response characterizations (4forums), and stance, though argument
+annotation in both IAC data sets is rather limited by comparison to that available in
+other data sets.
+Such efforts add to the volume of currently available data for which at least some
+elements of the argumentative structure have been identiﬁed. The most comprehensive
+and completely annotated existing collection of such data is the openly accessible
+database, AIFdb17 (Lawrence et al. 2012), containing over 14,000 Argument Interchange
+Format (AIF) argument maps, with over 1.6m words and 160,000 claims in 14 different
+languages.18 These numbers are growing rapidly, thanks to both the increase in analysis
+tools interacting directly with AIFdb and the ability to import analyses produced with
+the Rationale and Carneades tools (Bex et al. 2012). Indeed, AIFdb aims to provide
+researchers with a facility to store large quantities of argument data in a uniform way.
+AIFdb Web services allow data to be imported and exported in a range of formats to
+encourage re-use and collaboration between researchers independent of the speciﬁc
+tools and data format that they require.
+Additionally, several online tools such as DebateGraph,19 TruthMapping,20 Debate-
+pedia,21 Agora,22 Argunet23 and Rationale Online 24 allow users to create and share
+argument analyses. Although these tools are helping to increase the volume of analyzed
+argumentation, they generally do not offer the ability to access this data and each
+use their own formats for its annotation and storage. At the moment, some research
+projects continue to introduce ad hoc, idiosyncratic data representation languages for
+argumentation and debate, which can limit reusability, integration, and longevity of the
+data sets.
+Whereas the previously discussed data sets can be viewed as “fully” structured
+argument data, there is an increasing usage of larger “semi-structured” argumentative
+data sources. The most striking example of such are recent data sets gathered from the
+ChangeMyView (CMV) Reddit subcommunity25 (Tan et al. 2016; Hidey and McKeown
+2018; Musi, Ghosh, and Muresan 2018). These data take the form of discussion threads
+where the original poster of a thread provides a viewpoint on a speciﬁc topic, and
+other users reply with comments aiming to change this view. If the original poster
+ﬁnds that a comment succeeds in changing their viewpoint, they can reply with a
+‘delta’ symbol indicating this. Although this data is not strictly argumentative, there
+are strong indicators of argumentative structure: Direct responses, for example, often
+include counterarguments to the original post. Indeed, Hua and Wang (2017) use CMV
+data to both train and evaluate a model for automatically generating arguments of the
+opposing stance for a given statement.
+17 http://www.aifdb.org.
+18 Chinese, Dutch, English, French, German, Hindi, Italian, Japanese, Korean, Polish, Portuguese, Russian,
+Spanish, and Ukrainian.
+19 http://debategraph.org
+20 https://www.truthmapping.com
+21 http://www.debatepedia.org
+22 http://agora.gatech.edu/
+23 http://www.argunet.org/
+24 https://www.rationaleonline.com/
+25 https://www.reddit.com/r/changemyview/
+783
+
+Computational Linguistics Volume 45, Number 4
+In addition to these corpora of structured argument data, there are large corpora of
+unstructured data available that are rich in argumentative structure, from, for example,
+Wikipedia, Twitter, Google Books, meeting data from the AMIDA Meeting Corpus26 an-
+notated using the Twente Argumentation Scheme (Rienks, Heylen, and Weijden 2005),
+and product reviews from Web sites such as Amazon and epinions.com. Although these
+corpora may be useful for certain argument mining techniques, such as those using
+unsupervised learning methods, there are limits on their utility imposed, inevitably, by
+their lack of annotation.
+Despite the lack of marked argument structure, Wikipedia, in particular, represents
+a considerable amount of data rich in argumentative content. In Aharoni et al. (2014),
+work toward annotating articles from Wikipedia using a meticulously monitored man-
+ual annotation process is discussed. The result is a corpus of 2,683 argument elements,
+collected in the context of 33 predeﬁned controversial topics, and organized under a
+simple structure detailing a claim and its associated supporting evidence.
+In their far-ranging work on Project Debater, 27 IBM has made extensive use of
+Wikipedia and other data to create the ﬁrst AI system that can debate humans on
+complex topics. Debater can respond to a given topic by automatically constructing a set
+of relevant pro/con arguments phrased in natural language. For example, when asked
+for responses to the topic “The sale of violent video games to minors should be banned,”
+an early prototype of Debater scanned approximately 4 million Wikipedia articles and
+determined the ten most relevant articles, scanned all 3,000 sentences in those articles,
+detected sentences that contain candidate claims, assessed their pro and con polarity,
+and then presented three relevant pro and con arguments,28 with more recent develop-
+ments also working toward choosing the most convincing of these arguments (Gleize
+et al. 2019), expanding the topic of the debate (Bar-Haim et al. 2019), and providing “ﬁrst
+principle” debate points, commonplace arguments that are relevant to many topics,
+where speciﬁc data are lacking (Bilu et al. 2019). These abilities are the result of ongoing
+work to extract meaningful argument data from large corpora. In Levy et al. (2014),
+the challenge of detecting Context Dependent Claims (CDCs) in Wikipedia articles
+was ﬁrst addressed, showing how, given a topic and a selection of relevant articles,
+a selection of “general, concise statements that directly support or contest the given
+topic” can be found. This work was followed in Rinott et al. (2015), where extracting
+supporting evidence from Wikipedia data for a given CDC was addressed. Bar-Haim
+et al. (2017) introduced the task of claim stance classiﬁcation, that is, detecting the target
+of a given CDC, and determining the stance toward that target. Levy et al. (2017) further
+developed CDC identiﬁcation, removing the need for pre-selected relevant articles, by
+ﬁrst deriving a claim sentence query to retrieve CDCs from a large unlabeled corpus.
+(Indeed, this retrieval task is increasingly becoming a distinct and challenging task in
+its own right, with applications such asargs.me [Wachsmuth et al. 2017] and new shared
+tasks such as Touche 29 driving the area forward.) Such large volumes of CDCs can be
+used both as potential points to be made by the Debater system as well as to aid in the
+interpretation of spoken material containing breaks, repetitions, or other irregularities
+(Lavee et al. 2019). The method introduced by Levy et al. is used in Shnarch et al. (2018)
+to generate weak labeled data (data of low quality compared to manual annotation,
+26 http://corpus.amidaproject.org/.
+27 https://www.research.ibm.com/artificial-intelligence/project-debater/.
+28 http://www.kurzweilai.net/introducing-a-new-feature-of-ibms-watson-the-debater .
+29 http://touche.webis.de.
+784
+
+Lawrence and Reed Argument Mining: A SurveyTable 1
+Signiﬁcant structured argumentation data sets available online.
+Name Description Size IAA URL Reference
+AIFdb Corpora
+Argumentation
+Schemes
+Examples of occurrences of Walton’s argumentation schemes found in
+episodes of the BBC Moral Maze Radio 4 programme.
+6,704
+words
+Single annotator http://corpora.aifdb.org/schemes Lawrence and Reed 2016
+Digging By Debating Collection of analyses of 19th century philosophical texts from the
+Hathi Trust collection.
+35,789
+words
+Single annotator http://corpora.aifdb.org/dbyd Murdock et al. 2017
+Dispute Mediation Argument maps of mediation session transcripts. 26,923
+words
+κ = 0.68 http://corpora.aifdb.org/mediation Janier and Reed 2016
+MM2012 Analyses of all episodes from the 2012 summer season of the BBC
+Moral Maze Radio 4 programme.
+29,068
+words
+κ = 0.55 (types),
+0.61 (relations)
+http://corpora.aifdb.org/mm2012 Budzynska et al. 2014
+US2016 2016 US presidential elections: annotations of selected excerpts of
+primary and general election debates, combined with annotations of
+selected excerpts of corresponding Reddit comments.
+87,064
+words
+κ = 0.75 http://corpora.aifdb.org/US2016 Visser et al. 2018
+Imported into AIFdb
+AraucariaDB An import of 661 argument analyses produced using Araucaria and
+stored in the Araucaria database.
+62,881
+words
+Single annotator http://corpora.aifdb.org/araucaria Reed 2006
+AraucariaDBpl A selection of over 50 Polish language analyses created using the
+Polish version of Araucaria.
+2,654 words Single annotator http://corpora.aifdb.org/araucariapl Budzynzka 2011
+Argument Annotated
+Essays
+The corpus consists of argument annotated persuasive essays, includ-
+ing annotations of argument components and argumentative relations.
+147,271
+words
+κ = 0.64–0.88
+(types), 0.71–0.74
+(relations)
+http://corpora.aifdb.org/AAECv2 Stab and Gurevych 2017
+eRulemaking Argument maps of 67 comment threads fromregulationroom.org. 26,083
+words
+κ = 0.73 http://corpora.aifdb.org/RRD Park and Cardie 2014
+Internet Argument
+Corpus (IAC)
+Consisting of 11,000 discussions and developed for research in politi-
+cal debate on Internet forums. Subsets of the data have been annotated
+for topic, stance, agreement, sarcasm, and nastiness, among others.
+1,031,398
+words
+κ = 0.22–0.60,
+¯κ ≈ 0.47
+http://corpora.aifdb.org/IAC Walker et al. 2012
+Language of
+Opposition
+Used in Rutgers for the SALTS project (http://salts.rutgers.edu/). 48,666
+words
+Not reported http://corpora.aifdb.org/looc1 Ghosh et al. 2014
+Microtext 112 manually created, short texts with explicit argumentation, and
+little argumentatively irrelevant material.
+7,828 words κ = 0.83 http://corpora.aifdb.org/Microtext Peldszus 2014
+Available elsewhere
+Argument Annotated
+User-Generated Web
+Discourse
+User comments, forum posts, blogs and newspaper articles annotated
+with an argument scheme based on an extended Toulmin model.
+84,673
+words
+αU = 0.51–0.80 https://bit.ly/2vdkHOD Habernal and Gurevych
+2017
+Consumer Debt
+Collection Practices
+(CDCP)
+User comments about rule proposals by the Consumer Financial Pro-
+tection Bureau collected from an eRulemaking website.
+∼88,000
+words
+α = 0.65 (types),
+0.44 (relations)
+http://joonsuk.org Niculae, Park, and Cardie
+2017
+Internet Argument
+Corpus (IAC) 2
+Corpus for research in political debate on Internet forums. It includes
+topic annotations, response characterizations, and stance.
+∼500,000
+forum posts
+Not reported https://nlds.soe.ucsc.edu/iac2 Abbott et al. 2016
+IBM Project Debater
+Data sets
+Collection of annotated data sets developed as part of Project Debater
+to facilitate this research. Organized by research sub-ﬁelds.
+Various Various https://ibm.co/2OlqieA Rinott et al. 2015, Levy et al.
+2017, etc.
+785
+
+Computational Linguistics Volume 45, Number 4
+but which can be automatically obtained in large quantities) and then combined with
+a smaller quantity of high quality, manually labeled data ( strong labeled data). Using
+the combined strong and weak data set resulted in improved performance for topic-
+dependent evidence detection, suggesting that this kind of data gathering can be a
+valuable asset, particularly in data-hungry neural network systems. The annotated data
+sets used in this and other Project Debater work are all available online.30
+Bosc, Cabrio, and Villata (2016) address another rich online data source, taking
+data from Twitter and deﬁning guidelines to detect “tweet-arguments” among a stream
+of tweets about a certain topic, before then pairing the identiﬁed arguments, and ﬁ-
+nally, providing a methodology to identify which kind of relation holds between the
+arguments composing a pair (i.e., support or attack). Bosc, Cabrio, and Villata report
+agreement of α = 0.81 for detecting argumentative tweets, and α = 0.67 for argument
+linking, with the resulting DART (Data set of Arguments and their Relations on Twitter)
+data set containing 4,000 tweets annotated as argument/not-argument with 446 support
+and 122 attack relations.
+Two of the major issues with the data currently available are the lack of a standard-
+ized methodology for annotation, and a central location for the storage and retrieval of
+consistently formatted annotated material. AIFdb Corpora31 (Lawrence and Reed 2014)
+aims to address these issues, leveraging the ability for material in a range of formats to
+be converted to AIF and imported into AIFdb and providing simple interfaces to collect
+and share corpora. AIFdb Corpora already collects over 7,000 of the 12,000 analyses
+contained in AIFdb into a range of corpora that are publicly available in perpetuity at
+ﬁxed permalinks. A list of the most signiﬁcant corpora is given in Table 1, including
+those imported and available through AIFdb as well as those elsewhere.
+5. Argument Mining: Automating Argument Analysis
+In the preceding sections, we have looked ﬁrst at a range of different techniques that are
+precursors to the task of argument mining, and at the manual analysis of the argumen-
+tative structure of a text, gaining an understanding of both the nature of argumentative
+structure as well as the process by which a human analyst understands and extracts
+this structure. We have then moved on to look at argument data, considering not just
+the corpora of data that are available, but also the automated methods used to extend
+these data. In this section we now break down the argument mining task into a range
+of individual challenges (see Figure 3). In Sections 6, 7, and 8, we will then look at each
+of these tasks in more detail, drawing together work targeted at varying domains, and
+using different approaches, to understand the challenges and progress made in each of
+these areas.
+For the purposes of this review, we use these tasks as a framework to present and
+organize the work carried out in the ﬁeld. In Section 6 we look at automatic approaches
+for identifying argument components and determining their boundaries. In Section 7
+we move on to look at the automatic identiﬁcation of properties that these clauses have,
+and in Section 8 we look at the identification of relations from simple premise/conclusion
+relations to argumentation scheme instances and dialogical properties. Where a piece of
+work offers a large contribution to several areas, we include these in multiple sections,
+grouping each part of their contribution with other works addressing the same tasks
+30 http://www.research.ibm.com/haifa/dept/vst/debating_data.shtml.
+31 http://corpora.aifdb.org/.
+786
+
+Lawrence and Reed Argument Mining: A Survey
+individually. For each task, we consider work carried out using a broad range of
+techniques, including statistical and linguistic methods.
+We have seen in Section 3 how the steps in manual analysis increase in complexity,
+from segmenting argumentative components to identifying argumentation schemes
+and dialogical relations. These levels are also reﬂected in the automation of argument
+analysis. In some cases it is sufﬁcient to know merely the range of argumentative types
+used in order to grade student essays (Ong, Litman, and Brusilovsky 2014), to know
+what stance an essay takes toward a proposition in order to check that it provides
+appropriate evidence to back-up its stance (Persing and Ng 2015), or whether a claim is
+veriﬁable in order to ﬂag these in online discussions (Park and Cardie 2014). However,
+if the goal is to reconstruct enthymemes (Razuvayevskaya and Teufel 2017) (see also the
+discussion of Feng and Hirst [2011] in Section 8.2) or ask critical questions about support
+relations, we also need to extract the nature of the argumentation schemes being used.
+In Figure 3, we show how these automatic tasks are inter-related. Starting from the
+identiﬁcation of argument components by segmenting and classifying these as part of
+the argument being made or not (these tasks are sometimes performed simultaneously,
+sometimes separated, and sometimes the latter is omitted completely), we move down
+through levels of increasing complexity: First, considering the role of individual clauses
+(both intrinsic, such as whether the clause is reported speech, and contextual such as
+whether the clause is the conclusion to an argument); second, considering argumenta-
+tive relations from simple premise/conclusion relationships; and third, considering
+whether a set of clauses forms a complex argumentative relation, such as an instance
+Figure 3
+The tasks and levels of complexity in argument mining techniques.
+787
+
+Computational Linguistics Volume 45, Number 4
+of an argumentation scheme. A similar classiﬁcation of argument mining tasks is given
+in Cabrio and Villata (2018), with Component Detection being split into the subtasks of
+Boundary Detection and Sentence Classiﬁcation. Although this represents a robust start-
+ing point, it is also important to distinguish the types of classiﬁcation (argument/non-
+argument and intrinsic/contextual). Cabrio and Villata also include the broad catego-
+rization of Relation Prediction, which again can be further broken down, looking at both
+general and argumentative relations.
+The arrows shown between tasks in the ﬁgure indicate ways in which the results
+from one task have been used to inform the execution of another. For example, the
+arrow from the Argument/Non-Argument task to the Contextual Clausal Properties
+task reﬂects much early argument mining work (e.g., Moens et al. 2007) that performed
+these tasks in sequence; deciding which parts of the text were argumentative and then
+assigning a role to them. This approach has been challenged, however, with Carstens
+and Toni (2015) being the ﬁrst to point out that whether a sentence is argumentative or
+not often depends on the context in which it is used; and instead advocating classifying
+relations first and then considering sentences to be argumentative if they have a relation con-
+necting them (reflected in the arrow from General Relations to Argument/Non-Argument).
+Similarly, some tasks can inform each other, for example, whereas Feng and Hirst
+(2011) showed that argument scheme instances could be classiﬁed given general rela-
+tions between ADUs, Lawrence and Reed (2015) showed that such general relations can
+be determined by classifying argument scheme components directly from segmented
+text. This inter-dependency between tasks has given rise to a growth in the application
+of multi-objective learning approaches (e.g., Eger, Daxenberger, and Gurevych 2017;
+Hou and Jochim 2017; Galassi, Lippi, and Torroni 2018; Morio and Fujita 2018), where
+all tasks are learned and performed at the same time. These examples highlight how the
+simple pipeline view of argument mining, which characterizes a lot of older research
+work, is increasingly being superceded by more sophisticated and interconnected tech-
+niques. We will explore a further way in which argument mining tasks can be interre-
+lated and interdependent when we consider rhetorical ﬁgures in Section 8.2.2.
+Developments in argument mining are both being informed by, and informing,
+the related areas discussed in Section 2. For example, the work of Ong, Litman, and
+Brusilovsky (2014) closely parallels both argumentative zoning and citation mining,
+offering the opportunity to link related elements automatically identiﬁed in scientiﬁc
+writing, such as how a claim may be supported by a nearby citation. Rumshisky et al.
+(2017) look at the dynamics of social or political conﬂict as it develops over time, au-
+tomatically identifying controversial issues where such conﬂict is occurring. Accuosto
+and Saggion (2019) show how argumentation in certain sections of a publication (in this
+case abstracts) can be good indicators of the quality of the work as a whole.
+6. Identifying Argument Components
+The automatic identiﬁcation of the argumentative sections of a text corresponds to the
+process of argument/non-argument classiﬁcation discussed in Section 3.2. Although
+carrying out this task in isolation does not give us a detailed picture of the argument
+structure, it has found use in, for example, predicting the usefulness of online reviews
+based solely on the amount of argumentative text that they contain (Passon et al.
+2018).
+One of the ﬁrst approaches to argument mining, and perhaps still the most devel-
+oped, is the work carried out by Moens et al. (Moens et al. 2007; Palau and Moens 2009;
+Mochales and Moens 2011), which ﬁrst attempts to detect the argumentative parts of a
+788
+
+Lawrence and Reed Argument Mining: A Survey
+text by ﬁrst splitting the text into sentences and then using features of these sentences
+to classify each as either Argument or Non-Argument. By training a range of classiﬁers
+on manually annotated examples from the Araucaria corpus (Reed 2006), an accuracy
+of 0.74 is obtained using a multinomial na ¨ıve Bayes classiﬁer trained on word couples,
+verbs, and text statistics.
+Similarly, Goudas et al. (2014) look at extracting arguments from social media,
+proposing a two-step approach for argument extraction similar to that used by Moens
+et al., ﬁrst using a statistical approach through the use of machine learning and, more
+speciﬁcally, the logistic regression classiﬁer to classify sentences as being part of the
+argument being made or not. This approach is applied to a corpus obtained from social
+media, concerning renewable energy sources in the Greek language; and for identifying
+sentences that contain arguments, an increase in performance from an F-score of 0.21,
+for the base case, to 0.77 is achieved. This approach is further developed in Sardianos
+et al. (2015), where conditional random ﬁelds are used to identify those segments from
+similar Greek social Web texts that contain argumentative elements.
+Although these results are encouraging, it is worth noting that the classiﬁcation of
+sentences carried out refers only to features intrinsic to the sentence and as such the
+classiﬁcation is not robust for sentences that may be part of an argument in one context,
+but not in a different context. Several examples of sentences that can be viewed as argu-
+mentative in some contexts, but not in others, can be seen in Carstens and Toni (2015),
+who instead advocate classifying pairs of sentences according to their argumentative
+relation and, if the relation is classiﬁed as support or attack, considering both sentences
+to be argumentative. In Section 8 we look at such techniques for identifying relations,
+and show that Carstens and Toni’s approach is in many cases preferable to the pre-
+identiﬁcation of argumentative components.
+Saint-Dizier (2018) offers an example of a situation where domain knowledge is
+required in order to determine whether or not a proposition is argumentative. Given
+the issue “Vaccine against Ebola is necessary,” it is argued that the proposition “7 people
+died during Ebola vaccine tests” is irrelevant or neutral with respect to the issue under
+a knowledge-based analysis, whereas a na¨ıve reading would rather interpret it as an at-
+tack. The importance of contextual domain knowledge highlighted by this example was
+ﬁrst explored by Saint-Dizier (2017) where, via the analysis of various corpora, the types
+of knowledge that are required to develop an efﬁcient argument mining system are ex-
+plored. This exploration shows that, in about 75% of cases, some contextual knowledge
+is required to accurately identify arguments with respect to a controversial issue.
+The idea that the context in which a text span appears can determine whether it
+is part of an argument or not (Opitz and Frank [2019] have shown that context can
+be more important than content) can be problematic for the general application of the
+supervised machine learning approaches discussed so far. In cases where context is not
+adequately captured, a model trained on one set of data can struggle to classify spans
+in another set of data where the context is different. As a result, rule-based and un-
+supervised learning approaches have also been applied to this task. The application of
+an unsupervised extractive summarization algorithm, TextRank, for the identiﬁcation of
+argumentative components is explored in Petasis and Karkaletsis (2016). The motivation
+is to examine whether there is any potential overlap between extractive summarization
+and argument mining, and whether approaches used in summarization (which typically
+model a document as a whole) can have a positive effect on tasks of argument mining.
+Evaluation is performed on two corpora containing user posts from an online debating
+forum and persuasive essays, with results suggesting that graph-based approaches
+789
+
+Computational Linguistics Volume 45, Number 4
+and approaches targeting extractive summarization can have a positive effect on tasks
+related to argument mining.
+Similarly, Wachsmuth, Stein, and Ajjour (2017) propose a model for determining
+the relevance of arguments using PageRank (Brin and Page 1998). In this approach, the
+relevance of an argument’s conclusion is decided by what other arguments reuse it as a
+premise. These results are compared with an argument relevance benchmark data set,
+manually annotated by seven experts. On this data set, the PageRank scores are found
+to beat several intuitive baselines and correlate with human judgments of relevance.
+One of the ﬁrst supervised learning approaches to segmentation was introduced by
+Soricut and Marcu (2003) as part of theSPADE system, which also operates on lexicalized
+syntactic trees. The authors compute the probability of inserting a discourse boundary
+between a child and parent node and attained an F-score of 0.83.
+The current state-of-the-art results for EDU identiﬁcation are obtained by the two-
+pass system of Feng and Hirst (2014), who use a sequence labeling approach. Similar
+to Soricut and Marcu (2003), the method makes predictions over pairs of tokens that
+are enriched with syntactic features. Feng and Hirst showed that predicting over token
+pairs and making these predictions in two passes improves the results, achieving a 0.93
+F-score on the recognition of in-sentence boundaries.
+ADU identiﬁcation, however, is considerably more challenging than identify-
+ing EDUs, requiring an understanding of the argumentative function of each span.
+Madnani et al. (2012) aim to separate argumentative discourse into two categories;
+ﬁrst, argumentative text, used to express claims and evidence, and second, language
+used to present and organize the claims and evidence (“shell”). In the example sen-
+tence “So I think the lesson to be drawn is that we should never hesitate to use military
+force...to keep the American people safe,” the underlined text is identiﬁed as shell.
+Separating shell from argumentative text is attempted using three methods: a rule-based
+system, a supervised probabilistic sequence model, and a principled hybrid version
+of the two. The rule-based system gives an F-score of 0.44, with the hybrid version
+giving 0.61 compared with 0.74 for a human annotator and 0.21 for a baseline that labels
+words as shell if they appear frequently in persuasive writing. The rule-based system
+uses a set of 25 hand-written regular expression patterns, for example, “I [MODAL]
+[ADVERB] AGREEVERB with the AUTHORNOUN.” The Supervised Sequence Model
+is based on conditional random ﬁelds using a small number of general features based
+on lexical frequencies, with the intuition behind these features being that shell language
+generally consists of chunks of words that occur frequently in persuasive language. It
+is important to note that, although the material identiﬁed as shell is not a part of the
+argument being made, this material contains valuable information about the argument
+structure, often indicating the occurrence of certain speech acts, or containing discourse
+markers (Hutchinson 2004).
+Lawrence et al. (2014) present an alternative supervised learning approach to ADU
+segmentation, focusing speciﬁcally on identiﬁcation of ADU boundaries. Two na ¨ıve
+Bayes classiﬁers are used to performProposition Boundary Learning, one to determine
+the ﬁrst word of a proposition and one to determine the last. The classiﬁers are trained
+using a set of manually extracted propositions as training data. The text to be segmented
+is ﬁrst split into words and a list of features is then determined for each of these
+words. The features used cover both intrinsic (the word itself, its length, and POS) and
+contextual (the word/punctuation before and the word/punctuation after). By looking
+at more general features (length and POS) and contextual features, this approach aims
+to overcome the variability in speciﬁc words that may start (or end) a proposition.
+790
+
+Lawrence and Reed Argument Mining: A Survey
+Having trained the classiﬁers, this same list of features is then determined for
+each word in the test data, enabling the classiﬁers to label each word as being “start”
+or “end.” Once the classiﬁcation has taken place, the individual starts and ends are
+matched to determine propositions, using their calculated probabilities to resolve situ-
+ations where a start is not followed by an end (i.e., where the length of the proposition
+text to be segmented is ambiguous). Using this method, a 32% increase in accuracy is
+achieved over simply segmenting the text into sentences when compared to argumen-
+tative spans identiﬁed by a manual analysis process.
+Ajjour et al. (2017) also ﬁnd that considering the broader context of surrounding
+words, or even the document as a whole, aids in locating proposition boundaries. The
+approach in this case is framed as a sequence labeling task, with a neural network
+model utilizing structural, syntactic, lexical, and pragmatic features, as well as capturing
+long-distance dependencies. Capturing the entire text with this model provides the best
+results across all domains, with F-scores of up to 0.89.
+Even reliably identifying ADU segment boundaries, however, is being recognized
+as insufﬁcient for identifying ADUs simply because ADUs typically express propo-
+sitions with a variety of linguistic surface phenomena obfuscating that propositional
+content. Mood, anaphora, ellipsis, deixis, reported speech, and more all introduce
+new challenges for ADU identiﬁcation. Jo et al. (2019) have used a combination of
+techniques, some statistical, some rule-based, and some hybrid, organized in a cascade
+structure, in order to attempt to recover the propositional structure underlying ADUs,
+in order to improve the performance of other argument mining tasks.
+7. Automatic Identiﬁcation of Clausal Properties
+In the previous section we explored a range of techniques for identifying the sections
+of a text that are argumentative; however, this does not yet tell us anything about
+the nature of these argumentative text spans, or how they work together. We now
+move on to look at techniques for automatically identifying properties of argumentative
+components. In this section, we look at identifying the function of each text span, ﬁrst
+considering intrinsic properties (e.g., whether a text span is evidence for a claim) and
+then look at identifying how a text span is used in the argument as a whole (e.g., premise
+vs. conclusion). In Section 8, we move on to look at the identiﬁcation of inter-clausal
+relations—for example, given a pair of text spans, identifying any support or conﬂict
+relationship between them.
+7.1 Intrinsic Clausal Properties
+The ﬁrst type of clausal properties we look at are those that are intrinsic to the clause
+itself. Although these properties are limited in what they tell us about the overall argu-
+mentative structure, they provide valuable information about the role that a particular
+text span is playing in the argument as a whole. For example, knowing that a claim is
+veriﬁable suggests a link to a piece of evidence in the text supporting this claim (Park
+and Cardie 2014); knowing that a clause is increasing the author’s ethos suggests that it
+is supporting a speciﬁc claim that they are making (Duthie, Budzynska, and Reed 2016);
+and knowing the type of evidence provided can be used to assign different weights to
+statements in clinical trials (Mayer, Cabrio, and Villata 2018), or help understand rulings
+in disability beneﬁts claims (Walker et al. 2018).
+Verifying the acceptability of propositions used as premises in an argument is a
+central issue in the linguistic and philosophical study of argumentation (Freeman 2000).
+791
+
+Computational Linguistics Volume 45, Number 4
+In the study of persuasive communication and rhetoric, this has led to a variety of ty-
+pologies of evidence. For example, Reynolds and Reynolds (2002) distinguish between
+statistical, testimonial, anecdotal, and analogical evidence; Hoeken and Hustinx (2003)
+use a revised distinction between individual examples, statistical information, causal
+explanations, and expert opinions; and Fahnestock and Secor (1988) utilize the classical
+stasis issues of fact, deﬁnition, cause, value, and action.
+This diversity is also evident in the computational classiﬁcation of propositions
+and evidence. In Park and Cardie (2014), online user comments are examined for
+propositions that are U NVERIFIABLE , VERIFIABLE NON-EXPERIENTIAL , or V ERIFIABLE
+EXPERIENTIAL , with associated supports of type reason, evidence, and optional evidence,
+respectively. A proposition is considered veriﬁable if it contains an objective assertion
+with a truth value that can be proved or disproved with objective evidence. Veriﬁ-
+able propositions are further split into experiential or non-experiential, depending on
+whether or not the proposition is about the writer’s personal state. For example, “My
+son has hypoglycemia” is tagged as Veriﬁable Experiential, whereas “food allergies are
+seen in less than 20% of the population” is marked as Veriﬁable Non-Experiential. Fol-
+lowing an annotation scheme developed on 100 randomly selected comments, manual
+annotation inter-coder reliability is moderate, yielding an unweighted Cohen’sκ of 0.73,
+whereas SVM classiﬁers trained with a range of features includingn-grams and features
+speciﬁc to each class exhibit statistically signiﬁcant improvement over the unigram
+baseline, achieving a macro F-score of 0.69. These results show that identifying proposi-
+tions of these types can be achieved with reasonable accuracy, although this would still
+need to be developed in order to identify the relations between these propositions and
+determine the argument structure. By having an indication of the required support for
+each proposition, this structure could then be used to identify areas where a proposition
+is not adequately supported.
+These classiﬁcations are revised in Park and Cardie (2018) to propositions of non-
+experiential fact (fact), propositions of experiential fact (testimony), propositions of value
+(value), propositions of policy (policy), and reference to a resource (reference). With these
+revised proposition categories and their associated supports of typereason and evidence,
+a further annotation study was carried out, resulting in the Consumer Debt Collection
+Practices (CDCP) corpus. This corpus consists of 731 user comments on the CDCP
+ruling, with 4,931 elementary units (of which the majority were propositions of value—
+45%), and 1,221 support relations (1,174 reason, and only 46 evidence). On this data set,
+Niculae (2018) achieved a maximum F1-score of 0.74 for proposition classiﬁcation using
+linear structured SVMs.
+Egawa, Morio, and Fujita (2019) adjust the annotation scheme of Park and Cardie
+slightly, replacing reference with rhetorical statement (which implicitly states the subjec-
+tive value judgment by expressing ﬁgurative phrases, emotions, or rhetorical questions)
+and replacing the relations with the more standard attack and support. This scheme was
+then used to annotate 345 posts from the ChangeMyView sub-Reddit, 32 resulting in
+4,612 proposition classiﬁcations and 2,713 relations that were then used in analyzing
+the semantic role of persuasive arguments.
+The value of being able to identify veriﬁable propositions is highlighted by the
+classiﬁcation of evidence types presented in Addawood and Bashir (2016), where Twit-
+ter posts are automatically identiﬁed as either a news media account (NEWS), blog
+post (BLOG), or no evidence (NO EVIDENCE). The data for this study are taken from
+32 https://www.reddit.com/r/changemyview/.
+792
+
+Lawrence and Reed Argument Mining: A Survey
+tweets on the FBI and Apple encryption debate, with 3,000 tweets annotated. SVM
+classiﬁers trained with n-grams and other features capture the different types of evi-
+dence used in social media and demonstrate signiﬁcant improvement over the unigram
+baseline, achieving a macro-averaged F-score of 0.83. Similarly, Dusmanu, Cabrio, and
+Villata (2017) look at argumentative tweets, classifying them as either fact or opinion
+with an F-score of 0.80 and the source of their information (e.g., CNN) with an F-score
+of 0.67.
+The classiﬁcation of factual statements for critical evaluation has gained prominence
+as part of fact-checking. Hassan, Li, and Tremayne (2015) classify sentences as non-
+factual, unimportant factual, and check-worthy factual. Similarly, Patwari, Goldwasser,
+and Bagchi (2017) and Jaradat et al. (2018) automatically determine the fact-check-
+worthiness of factual claims in political debates. Naderi and Hirst (2018a) automati-
+cally distinguish between true, false, stretch, and dodge statements in parliamentary
+proceedings.
+Anand et al. (2011) consider a different level of intrinsic clausal properties than
+those discussed so far, looking not at the structural nature of propositions, but at their
+function. This work describes the development of a corpus of blog posts where attempts
+to persuade and the corresponding tactics used in this persuasion are annotated. Per-
+suasion involves the change in mental state of the other party classed as either Belief
+Revision, Attitude Change, or Compliance Gaining. The methods that can be used to
+achieve these changes in mental state are considered in Marwell and Schmitt (1967),
+who offer 12 strategy types for securing behavioral compliance. A further six non-
+logical “principles of inﬂuence” are covered in Cialdini (2001). By combining these with
+argumentative patterns inspired by Walton, Reed, and Macagno (2008), and removing
+overlapping tactics, Anand et al. produce a list of 16 types of rhetorical tactic for
+persuasive acts. By using a na ¨ıve Bayes classiﬁer for seven possible combinations of
+three feature sets to perform this classiﬁcation, Anand et al. report a best result with an
+F-score of 0.58. However, rhetorical relations are often implicit and not clearly indicated
+in the text, and, as such, their discovery requires a richer set of features.
+Duthie, Budzynska, and Reed (2016) consider another facet of persuasion, using
+a pipeline of techniques to extract positive and negative ethotic statements (Aristotle
+1991) from parliamentary records. Although this work differs from many other ar-
+gument mining approaches (which despite often looking at persuasion, nonetheless
+typically focus exclusively on logos rather than ethos or pathos), there is a clear link, with
+ethotic relations often following the same logotic structures, but with the character of
+a person as their target. In this work, those statements in which the speaker refers to
+another person (referred to as Ethotic Sentiment Expressions, ESEs) and those in which
+they do not ( non-ESEs) are ﬁrst extracted using a combination of named entity recog-
+nition, POS tagging, and a set of domain speciﬁc rules to locate statements referring to
+another person, organization, or agentive entity. These are then passed to the anaphora
+layer where both source-person and target-person of the statement are retrieved from
+the original text. Finally, a sentiment layer consisting of a sentiment classiﬁer combined
+with sentiment and ethotic word lexicons classiﬁes ESEs as positive and negative. The
+resulting pipeline achieves an F-score of 0.70 for ESE/non-ESE classiﬁcation, compared
+with 0.45 for a baseline classiﬁer that predicts only the target class (ESE); and 0.78 for
++/−ESE classiﬁcation, compared with a baseline of 0.67. A similar corpus of statements
+aimed at defending against ethotic attacks, or defending the speaker’s reputation, is
+presented in Naderi and Hirst (2018b), and extracted from various issues in Canadian
+parliamentary proceedings.
+793
+
+Computational Linguistics Volume 45, Number 4
+In Villalba and Saint-Dizier (2012), an approach to the identiﬁcation and analysis
+of arguments as they appear in opinion texts is developed. Examples are given that
+show that arguments are either incorporated into evaluative expressions with a heavy
+semantic load (e.g., evaluative adjectives such as ‘repas familial’ means a meal that
+has properties such as casual, home-made, good, and abundant), or composed of an
+evaluation and one or more discourse structures such as justiﬁcation, elaboration, or
+illustration, whose aim is to persuade the reader of the evaluation.
+For example:
+• Justiﬁcation: The hotel is 2 stars [JUSTIFICATION due to the lack of bar
+and restaurant facilities].
+• Reformulation: Could be improved [REFORMULATION in other words,
+not so good].
+• Elaboration by Illustration or Enumeration: The bathrooms were in a bad
+condition: [ILLUSTRATION the showers leaked, and the plug mechanism
+in the bath jammed. . . ] Breakfast selection is very good [ENUMERATION
+with a range of cereals, tea and coffee, cold meats and cheese, fresh and
+canned fruit, bread, rolls and croissants, and a selection of cooked items.]
+• Elaboration via Precision: Friendly and helpful staff [PRECISION
+especially the service executives at the counter.]
+• Elaboration via Comparison: These head phones are excellent
+[COMPARISON as if you are in a concert room.]
+• Elaboration via Consequence: a high soundprooﬁng
+[ELAB-CONSEQUENCE that allows you to have a rest after a long
+working day.]
+• Contrast: The price is very reasonable [CONTRAST but comfort is rather
+poor.]
+• Concession: Very quiet [CONCESSION in spite of its downtown location
+in a nightlife area.]
+These relations are processed using TextCoop (Saint-Dizier 2012), a platform de-
+signed for discourse analysis, with a logic and linguistic perspective. The results com-
+pared to a manual annotation on a corpus of 50 texts range between precision (0.85–
+0.92), and recall (0.76–0.86) over the eight relations listed above.
+The Automatic Argumentative Analysis (A3) algorithm described in Pallotta and
+Delmonte (2011) provides an alternative approach to classifying statements according to
+rhetorical roles. A3 is a module developed based on the GETARUNS system (Delmonte
+2007) for interaction mining (the discovery and extraction of insightful information from
+digital conversations, namely, those human–human information exchanges mediated
+by digital network technology). The module takes as input the complete semantic
+representation produced by GETARUNS and produces argumentative annotation using
+the following 20 discourse relation labels: circumstance, narration, adverse, obligation,
+evaluation, statement, result, hypothesis, elaboration, permission, cause, motivation,
+explanation, agreement, contrast, question, inception, setting, evidence, and prohibi-
+tion. These labels come partly from Rhetorical Structure Theory (Mann and Thompson
+1987) and partly from other theories, including those reported by Hobbs (1993) and
+Dahlgren (1988).
+794

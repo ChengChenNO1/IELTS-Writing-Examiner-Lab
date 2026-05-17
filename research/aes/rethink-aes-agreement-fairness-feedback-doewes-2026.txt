@@ -1,0 +1,729 @@
+ 
+Rethinking Automated Essay Scoring
+Citation for published version (APA):
+Doewes, A. (2026). Rethinking Automated Essay Scoring: Agreement, Fairness, and Feedback. [Phd Thesis 1
+(Research TU/e / Graduation TU/e), Mathematics and Computer Science]. Eindhoven University of Technology.
+Document status and date:
+Published: 28/01/2026
+Document Version:
+Publisher’s PDF, also known as Version of Record (includes final page, issue and volume numbers)
+Please check the document version of this publication:
+• A submitted manuscript is the version of the article upon submission and before peer-review. There can be
+important differences between the submitted version and the official published version of record. People
+interested in the research are advised to contact the author for the final version of the publication, or visit the
+DOI to the publisher's website.
+• The final author version and the galley proof are versions of the publication after peer review.
+• The final published version features the final layout of the paper including the volume, issue and page
+numbers.
+Link to publication
+General rights
+Copyright and moral rights for the publications made accessible in the public portal are retained by the authors and/or other copyright owners
+and it is a condition of accessing publications that users recognise and abide by the legal requirements associated with these rights.
+            • Users may download and print one copy of any publication from the public portal for the purpose of private study or research.
+            • You may not further distribute the material or use it for any profit-making activity or commercial gain
+            • You may freely distribute the URL identifying the publication in the public portal.
+If the publication is distributed under the terms of Article 25fa of the Dutch Copyright Act, indicated by the “Taverne” license above, please
+follow below link for the End User Agreement:
+www.tue.nl/taverne
+Take down policy
+If you believe that this document breaches copyright please contact us at:
+openaccess@tue.nl
+providing details and we will investigate your claim.
+Download date: 17. May. 2026
+
+ PhD Thesis
+matte laminate
+book size 170 x 240 mm
+cyan magenta yellow black
+RETHINKING AUTOMATED ESSA Y SCORING: AGREEMENT, FAIRNESS, AND FEEDBACKAFRIZAL DOEWES
+
+Rethinking Automated Essay Scoring:
+Agreement, Fairness, and Feedback
+Afrizal Doewes
+
+Rethinking Automated Essay Scoring: Agreement, Fairness, and Feed-
+back by Afrizal Doewes.
+Eindhoven: Technische Universiteit Eindhoven, 2026. Proefschrift.
+A catalogue record is available from the Eindhoven University of Tech-
+nology Library
+ISBN 978-90-386-6587-0
+SIKS Dissertation Series No. 2026-09
+The research reported in this thesis has been carried out under the
+auspices of SIKS, the Dutch Research School for Information and
+Knowledge Systems.
+Keywords: automated essay scoring, evaluation metric, individual fairness,
+counterfactual explanation, feedback mechanism
+Cover design: Afrizal Doewes, Loemongga M. I. Haristmaya
+Printed by: ipskampprinting.nl
+Copyright © 2026 by Afrizal Doewes. All Rights Reserved.
+
+Rethinking Automated Essay Scoring:
+Agreement, Fairness, and Feedback
+PROEFSCHRIFT
+ter verkrijging van de graad van doctor aan de
+Technische Universiteit Eindhoven, op gezag van de
+rector magnificus prof.dr. S.K. Lenaerts, voor een
+commissie aangewezen door het College voor
+Promoties, in het openbaar te verdedigen op
+woensdag 28 januari 2026 om 11:00 uur
+door
+Afrizal Doewes
+geboren te Surakarta, Indonesië
+
+Dit proefschrift is goedgekeurd door de promotoren en de samenstelling van de
+promotiecommissie is als volgt:
+Voorzitter: Prof.dr. K.M. van Hee
+Promotor: Prof. dr. M. Pechenizkiy
+Co-promotor: Dr. ir. M.A. Conijn
+Leden: Prof. dr. T. Karkkainen (University of Jyväskylä)
+Dr. ir. M.C. Willemsen
+Prof. dr. G.H.L. Fletcher
+Dr. F. Bouchet (Sorbonne Université)
+Prof. dr. A. Merceron (Berliner Hochschule für Technik)
+Het onderzoek of ontwerp dat in dit proefschrift wordt beschreven is uitgevoerd
+in overeenstemming met de TU/e Gedragscode Wetenschapsbeoefening.
+
+Summary
+Automated Essay Scoring (AES) systems have emerged as powerful tools to
+streamline the evaluation of student essays by leveraging machine learning and
+natural language processing techniques. Despite their growing adoption in ed-
+ucational settings, several critical challenges remain in ensuring the reliability ,
+fairness, and practical usefulness of AES systems. This thesis addresses these
+challenges by critically evaluating the limitations of current AES methodologies,
+exploring fairness considerations, and exploring feedback mechanisms that en-
+hance robustness and actionability in AES systems, particularly through coun-
+terfactual explanations.
+This thesis is structured around four key areas of investigation:
+Chapter 4 critically examines the limitations of relying solely on human-
+computer agreement as the primary evaluation metric for Automated Essay
+Scoring (AES) systems. While models with high agreement scores are often
+considered successful, this chapter presents empirical evidence that such mod-
+els may still exhibit serious reliability issues when exposed to challenging input
+scenarios—such as off-topic essays, gibberish responses, and paraphrased an-
+swers. Specifically , the chapter shows that even AES models meeting all stan-
+dard quantitative performance thresholds (e.g., Quadratic Weighted Kappa) fail
+in two out of three validity tests, raising concerns about their readiness for op-
+erational deployment.
+To address these shortcomings, the chapter explores two strategies for im-
+proving AES robustness. First, augmenting the training data of prompt-specific
+models with off-topic (from other prompts) and gibberish responses signifi-
+cantly enhances the model’s ability to detect and penalize anomalous inputs,
+
+vi
+without degrading its overall scoring performance. Second, the use of a simple
+rule-based filter improves gibberish detection, offering a lightweight yet effec-
+tive safeguard.
+Overall, the findings underscore the limitations of agreement-based eval-
+uation and advocate for broader testing frameworks that include inputs that
+fall outside the typical training distribution, such as off-topic or nonsensical
+responses. For AES systems to be safely and fairly deployed, they must demon-
+strate robustness not only on standard test sets but also in handling inputs that
+challenge the integrity of automated scoring.
+Chapter 5 investigates the use of Quadratic Weighted Kappa (QWK) as a
+standard performance metric for evaluating AES systems. While QWK is widely
+adopted for its ability to account for chance agreement on ordinal scales, this
+chapter identifies several important limitations in its application. These include
+its sensitivity to rating scales, its behavior under the so-called kappa para-
+dox—where high percent agreement may still yield low QWK scores—and its
+vulnerability to class distribution imbalances and the positioning of agreement
+values in the confusion matrix. The analysis is grounded in experiments using
+the ASAP dataset and, while context-specific, the findings raise broader con-
+cerns about the stability and interpretability of QWK across different scoring
+scenarios.
+In response, the chapter explores complementary strategies, such as incorpo-
+rating Linear Weighted Kappa (LWK) and combining multiple evaluation metrics
+to provide a more comprehensive view of model quality . Rather than advocat-
+ing for the replacement of QWK, the chapter encourages a more cautious and
+contextualized use of this metric in AES research and practice. It underscores
+the importance of aligning evaluation choices with the structure of the scoring
+task, thereby promoting more robust and interpretable assessments.
+Chapter 6 introduces a methodology for evaluating individual fairness in
+AES systems. Unlike group-level fairness, which focuses on ensuring fairness
+across demographic groups, individual fairness ensures that similar essays re-
+ceive similar scores. The need for individual fairness has been highlighted in
+prior work. Bejar et al. [BFFR14] demonstrated that automated scoring systems
+can be manipulated through construct-irrelevant strategies, such as substituting
+words with rarer synonyms. This allows essays of similar quality to receive dif-
+ferent scores depending on superficial lexical choices, raising concerns about
+consistency at the individual level. Kumar et al. [KPS+23] found that AES mod-
+els can be oversensitive to small changes and overstable to substantial content
+edits, revealing inconsistencies in how similar essays are scored.
+To address this, the chapter compares various text representations—such as
+
+vii
+Bag-of-Words (BOW), TF-IDF, Sentence-BERT, and LASER—and scoring mod-
+els including Ridge Regression, Random Forest, and Gradient Boosting, in their
+ability to maintain fairness. The study evaluates consistency in scoring across
+similar essays using cosine-based similarity measures and a set of fairness-
+related criteria. Among the combinations tested, Sentence-BERT paired with
+Gradient Boosting achieved strong agreement with human scores and showed
+favorable behavior across the fairness evaluation metrics, including a smooth
+correlation between essay similarity and score difference. This chapter proposes
+a flexible evaluation framework for individual fairness, demonstrating how text
+similarity and score consistency can be jointly analyzed to better understand
+AES behavior in educational contexts.
+Chapter 7 introduces an exploratory approach to improving feedback in AES
+through the use of counterfactual explanations supported by Large Language
+Models (LLMs). The system provides personalized, actionable feedback by gen-
+erating both positive and negative counterfactual examples, suggesting minimal
+but meaningful changes that can lead to improved essay scores. Positive coun-
+terfactuals highlight how specific improvements (e.g., better grammar, spelling,
+or word choice) may raise scores, whereas negative counterfactuals illustrate
+how certain errors could lower scores. This dual approach is intended to en-
+hance model robustness and help students better understand the consequences
+of both revising and neglecting aspects of their writing.
+Additionally , the chapter proposes a practical label-generation technique for
+regression-based essay scoring, addressing the unique challenges of counter-
+factual sample generation. This technique supports more consistent scoring of
+counterfactuals, enabling the system to refine its predictions more effectively .
+A survey conducted with prospective teachers yielded generally positive re-
+sponses, with participants finding the feedback meaningful while also suggest-
+ing a more user-friendly interface and additional interactive features. Overall,
+the chapter positions LLM-supported AES feedback as a promising direction that
+warrants further classroom-based evaluation to confirm its educational impact.
+This thesis makes four key contributions across its core research questions
+and experimental studies:
+• Empirical evidence demonstrating that high human-computer agreement
+alone is insufficient to ensure reliable AES performance, particularly in di-
+verse input scenarios such as off-topic essays and gibberish. Strategies, in-
+cluding retraining models with off-topic and gibberish data, are proposed
+to improve model robustness.
+• An empirical investigation into the behavior of Quadratic Weighted Kappa
+
+viii
+(QWK) in AES evaluation, highlighting its limitations with respect to rat-
+ing scale sensitivity , prevalence, and the kappa paradox. Based on analy-
+ses using the ASAP dataset, the thesis suggests incorporatingLinear Weighted
+Kappa (LWK) and multiple evaluation metrics to support more robust and
+context-sensitive AES model assessments.
+• A methodology for assessing individual fairness in AES, which includes
+evaluating text representation techniques and regression models. The
+methodology analyzes whether similar essays receive consistent scores
+by considering multiple fairness-related criteria, including similarity rank-
+ings, feature-based discrimination, and score consistency across essay pairs.
+• The development of an innovative web-based platform that integrates
+counterfactual explanations using both positive and negative examples,
+supported by LLMs. This platform offers personalized, actionable feed-
+back to students, enabling incremental essay improvements. The system
+includes a novel label generation technique for regression-based essay
+scoring, improving the model’s robustness and the quality of feedback.
+User surveys validated the platform’s effectiveness while highlighting ar-
+eas for further enhancement.
+The findings of this thesis highlight the need for more comprehensive eval-
+uation methods in AES systems, considering not only agreement with human
+scores but also fairness and the potential to support student learning outcomes.
+Future research directions include further exploration of multi-modal approaches,
+improving feedback mechanisms through more advanced LLMs, and extending
+the proposed methodologies to other educational applications. These efforts
+aim to create more reliable, fair, and educationally valuable AES systems that
+can enhance the learning experience for students.
+
+List of Publications
+The work described in Chapters 4–7 is based on publications 1, 2, 3, and the
+unpublished manuscript (5), respectively . The list of publications resulting from
+this PhD research is provided below.
+Conference Publications
+1. Afrizal Doewes and Mykola Pechenizkiy . On the Limitations of Human-
+Computer Agreement in Automated Essay Scoring . International Educa-
+tional Data Mining Society (ERIC), 2021.
+2. Afrizal Doewes, Akrati Saxena, Yulong Pei, and Mykola Pechenizkiy . In-
+dividual Fairness Evaluation for Automated Essay Scoring System . Interna-
+tional Educational Data Mining Society (ERIC), 2022.
+3. Afrizal Doewes, Nughthoh Arfawi Kurdhi, and Akrati Saxena. Evaluating
+quadratic weighted kappa as the standard performance metric for automated
+essay scoring. 16th International Conference on Educational Data Mining
+(EDM), 2023. International Educational Data Mining Society (IEDMS),
+pp. 103–113.
+Doctoral Consortium Publication
+4. Afrizal Doewes and Mykola Pechenizkiy . Structural Explanation of Au-
+tomated Essay Scoring . Doctoral Consortium, Educational Data Mining
+Conference (EDM), 2020.
+
+x List of Publications
+Unpublished Manuscript
+5. Afrizal Doewes, Jiaxu Zhao, Hasan Zainnuri, Rianne Conijn, and Mykola
+Pechenizkiy .LLM-Supported Counterfactual Explanations in Automated Es-
+say Scoring. Manuscript in preparation, 2025.
+
+Contents
+Summary v
+List of Publications ix
+List of Figures xvii
+List of Tables xix
+1 Introduction 1
+1.1 Automated Essay Scoring . . . . . . . . . . . . . . . . . . . . . . . . 1
+1.2 Impact of AES on Different Stakeholders . . . . . . . . . . . . . . . 3
+1.2.1 Impact on Students . . . . . . . . . . . . . . . . . . . . . . . 3
+1.2.2 Impact on Educators . . . . . . . . . . . . . . . . . . . . . . 3
+1.2.3 Impact on Educational Institutions . . . . . . . . . . . . . . 4
+1.2.4 Impact on Policymakers . . . . . . . . . . . . . . . . . . . . 5
+1.2.5 Societal Implications . . . . . . . . . . . . . . . . . . . . . . 5
+1.3 Scope and Problem Statement . . . . . . . . . . . . . . . . . . . . . 5
+1.4 Research Questions and Objectives . . . . . . . . . . . . . . . . . . 7
+1.5 Research Approach . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10
+1.6 Thesis Contribution and Outline . . . . . . . . . . . . . . . . . . . . 11
+2 Background and Core Concepts 15
+2.1 Machine Learning in AES . . . . . . . . . . . . . . . . . . . . . . . . 15
+2.1.1 Classical and Deep Learning Approaches . . . . . . . . . . 15
+
+xii CONTENTS
+2.1.2 Vector Representations of Text . . . . . . . . . . . . . . . . 16
+2.1.3 Challenges in Machine Learning for AES . . . . . . . . . . 19
+2.1.4 Connection to the Thesis . . . . . . . . . . . . . . . . . . . . 20
+2.2 Benefits and Limitations of AES . . . . . . . . . . . . . . . . . . . . 20
+2.2.1 Benefits of AES . . . . . . . . . . . . . . . . . . . . . . . . . 20
+2.2.2 Limitations of AES . . . . . . . . . . . . . . . . . . . . . . . . 21
+2.2.3 Connection to the Thesis . . . . . . . . . . . . . . . . . . . . 23
+2.3 Evaluation Metrics in Automated Essay Scoring . . . . . . . . . . . 23
+2.3.1 Kappa and Weighted Kappa . . . . . . . . . . . . . . . . . . 23
+2.3.2 Complementary Metrics for AES Evaluation . . . . . . . . 27
+2.3.3 Connection to the Thesis . . . . . . . . . . . . . . . . . . . . 29
+2.4 Fairness in AES . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 30
+2.4.1 Group and Individual Fairness . . . . . . . . . . . . . . . . 30
+2.4.2 Operationalizing Individual Fairness in This Thesis . . . . 31
+2.4.3 Connection to the Thesis . . . . . . . . . . . . . . . . . . . . 32
+2.5 Counterfactual Explanations in Machine Learning . . . . . . . . . 33
+2.5.1 Connection to the Thesis . . . . . . . . . . . . . . . . . . . . 34
+3 Research Approach 35
+3.1 Overview of the Research Approach . . . . . . . . . . . . . . . . . . 35
+3.2 Empirical Evaluation . . . . . . . . . . . . . . . . . . . . . . . . . . . 36
+3.2.1 Dataset . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 36
+3.2.2 Feature Extraction . . . . . . . . . . . . . . . . . . . . . . . . 38
+3.2.3 Model Training and Evaluation . . . . . . . . . . . . . . . . 41
+3.2.4 Evaluation Metrics . . . . . . . . . . . . . . . . . . . . . . . 42
+3.3 Prototype Development . . . . . . . . . . . . . . . . . . . . . . . . . 43
+3.3.1 System Design . . . . . . . . . . . . . . . . . . . . . . . . . . 43
+3.3.2 Incremental Score Improvement Framework . . . . . . . . 44
+3.3.3 Connection to Chapter 7 . . . . . . . . . . . . . . . . . . . . 45
+3.3.4 Survey Methodology and Motivation . . . . . . . . . . . . . 45
+3.4 Rationale for the Combined Approach . . . . . . . . . . . . . . . . 45
+3.5 Ethical Considerations . . . . . . . . . . . . . . . . . . . . . . . . . . 45
+3.5.1 Use of Public Datasets . . . . . . . . . . . . . . . . . . . . . 45
+3.5.2 Survey Participation and Consent . . . . . . . . . . . . . . . 46
+4 On the Limitations of Human-Computer Agreement in Automated
+Essay Scoring 47
+4.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 47
+4.2 Experimental Setup . . . . . . . . . . . . . . . . . . . . . . . . . . . 49
+
+CONTENTS xiii
+4.2.1 Dataset . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 50
+4.2.2 Feature Extraction . . . . . . . . . . . . . . . . . . . . . . . . 50
+4.2.3 Model Training . . . . . . . . . . . . . . . . . . . . . . . . . 50
+4.3 Score Agreement Evaluation . . . . . . . . . . . . . . . . . . . . . . 50
+4.4 Results . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 51
+4.4.1 Model Performance Evaluation . . . . . . . . . . . . . . . . 51
+4.4.2 Evaluating and Improving the Model . . . . . . . . . . . . 53
+4.5 Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 61
+5 Evaluating QWK as the Standard Performance Metric for AES 63
+5.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 63
+5.2 Experiment Settings . . . . . . . . . . . . . . . . . . . . . . . . . . . 66
+5.2.1 Dataset . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 66
+5.2.2 Model Training . . . . . . . . . . . . . . . . . . . . . . . . . 66
+5.3 QWK Evaluation in AES Context . . . . . . . . . . . . . . . . . . . . 67
+5.3.1 The Effect of Rating Scale to QWK . . . . . . . . . . . . . . 67
+5.3.2 Kappa Paradox . . . . . . . . . . . . . . . . . . . . . . . . . . 71
+5.3.3 Proportion of Categories in Agreement . . . . . . . . . . . 72
+5.3.4 Position Change in Agreement . . . . . . . . . . . . . . . . 77
+5.3.5 The Number of Raters . . . . . . . . . . . . . . . . . . . . . 79
+5.4 Discussion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 80
+5.5 Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 82
+6 Individual Fairness Evaluation for Automated Essay Scoring System 83
+6.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 83
+6.2 Problem Statement . . . . . . . . . . . . . . . . . . . . . . . . . . . . 85
+6.3 Individual Fairness Assessment Methodology for AES . . . . . . . 86
+6.4 Experimental Setup . . . . . . . . . . . . . . . . . . . . . . . . . . . 88
+6.4.1 Dataset . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 88
+6.4.2 Text Representation of Essays . . . . . . . . . . . . . . . . . 89
+6.4.3 Model Training and Evaluation . . . . . . . . . . . . . . . . 89
+6.5 Experimental Results . . . . . . . . . . . . . . . . . . . . . . . . . . 90
+6.5.1 Evaluating Essay Similarity . . . . . . . . . . . . . . . . . . 90
+6.5.2 Evaluation against Paraphrasing . . . . . . . . . . . . . . . 96
+6.5.3 Evaluating the Individual Fairness . . . . . . . . . . . . . . 98
+6.5.4 Discussion . . . . . . . . . . . . . . . . . . . . . . . . . . . . 103
+6.6 Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 106
+
+xiv CONTENTS
+7 LLM-Generated Counterfactual Explanations in Automated Essay Scor-
+ing 107
+7.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 107
+7.2 Counterfactual Explanations & Large Language Models in AES . 109
+7.3 Experiment Settings . . . . . . . . . . . . . . . . . . . . . . . . . . . 111
+7.3.1 Dataset . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 111
+7.3.2 Essay Features . . . . . . . . . . . . . . . . . . . . . . . . . . 111
+7.3.3 Model Training and Evaluation . . . . . . . . . . . . . . . . 111
+7.4 Retraining Scoring Model using Counterfactuals . . . . . . . . . . 112
+7.4.1 Generating Counterfactual Samples . . . . . . . . . . . . . 113
+7.4.2 Generating Labels for Counterfactual Data . . . . . . . . . 115
+7.4.3 Evaluation of Model Performance . . . . . . . . . . . . . . 117
+7.5 Generating Feedback using Counterfactual Explanations . . . . . 122
+7.5.1 LLM Feedback Integration . . . . . . . . . . . . . . . . . . . 122
+7.5.2 Algorithm for Finding Minimum Solution . . . . . . . . . . 124
+7.5.3 Grammatical Corrections-based Solution . . . . . . . . . . 125
+7.5.4 Longer Essay-based Solution . . . . . . . . . . . . . . . . . 126
+7.5.5 Generating Feedback Explanations . . . . . . . . . . . . . . 128
+7.6 Survey of System Feedback and Analysis . . . . . . . . . . . . . . . 128
+7.6.1 Survey Methodology . . . . . . . . . . . . . . . . . . . . . . 128
+7.6.2 Survey Results . . . . . . . . . . . . . . . . . . . . . . . . . . 130
+7.7 Discussion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 133
+7.7.1 Limitations . . . . . . . . . . . . . . . . . . . . . . . . . . . . 135
+7.7.2 Future Work . . . . . . . . . . . . . . . . . . . . . . . . . . . 136
+7.8 Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 136
+8 Conclusion and Future Work 137
+8.1 Contributions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 137
+8.2 Impact on Stakeholders . . . . . . . . . . . . . . . . . . . . . . . . . 140
+8.3 Limitations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 142
+8.4 Future Work . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 144
+8.5 Final Thoughts . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 145
+Author Contribution 147
+Appendices 151
+
+CONTENTS xv
+A Prompts Used for Counterfactual and Feedback Generation 153
+A.1 Overview of Prompt Usage . . . . . . . . . . . . . . . . . . . . . . . 153
+A.2 Prompt for Grammar Correction . . . . . . . . . . . . . . . . . . . . 154
+A.3 Prompt for Sentence Expansion . . . . . . . . . . . . . . . . . . . . 154
+A.4 Prompt for Feedback on Improvements . . . . . . . . . . . . . . . . 155
+B Survey Instruction and Questions 157
+B.1 Survey Instructions . . . . . . . . . . . . . . . . . . . . . . . . . . . 157
+B.2 Survey Questions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 158
+Bibliography 161
+Curriculum Vitae 185
+Acknowledgments 187
+SIKS Dissertations 189
+
+
+
+List of Figures
+1.1 AES Impact on Stakeholders . . . . . . . . . . . . . . . . . . . . . . 4
+1.2 Contributions and Structure of the Thesis . . . . . . . . . . . . . . 11
+4.1 SBERT representation for 8 prompts in ASAP dataset . . . . . . . 56
+4.2 Local interpretation for a single prediction . . . . . . . . . . . . . . 58
+5.1 Agreement table of size 2x2 . . . . . . . . . . . . . . . . . . . . . . 73
+5.2 Prevalence and kappa correlation on 2x2 matrix . . . . . . . . . . 73
+5.3 Agreement tables with size of 4x4 from ASAP dataset Prompt
+4. First table was the original agreement table between the score
+predictions of Gradient Boosting and the score labels from human
+raters. In the next tables, the diagonal values were manipulated
+to increase the prevalence to examine its impact on QWK. . . . . 75
+5.4 The prevalence’s effect on QWK with respect to the acceptance
+threshold in AES (0.7) . . . . . . . . . . . . . . . . . . . . . . . . . . 76
+5.5 The effect of changing the position of agreements on QWK. Both
+examples presented are from the last two agreement tables in
+Figure 5.3. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 77
+6.1 Normalized values of twelve interpretable essay features for the
+nearest and farthest essay pairs across four text-representation
+methods. Rows correspond to (a) BOW, (b) TF-IDF, (c) Sentence-
+BERT, and (d) LASER. . . . . . . . . . . . . . . . . . . . . . . . . . . 93
+6.2 Aggregate Features Differences for three Distance Groups . . . . 96
+
+xviii LIST OF FIGURES
+6.3 Ranking Evaluation from the Original and Paraphrased Essays . . 98
+6.4 Score and Distance Distribution . . . . . . . . . . . . . . . . . . . . 100
+6.5 Average Score Differences for five Distance Groups . . . . . . . . 101
+6.6 Average Score Differences for 100 Distance Groups (from left to
+right: the nearest pairs to the farthest pairs) . . . . . . . . . . . . 102
+7.1 Overview of the methodology for model retraining using coun-
+terfactuals and feedback generation through counterfactual ex-
+planations and Large Language Model (LLM) . . . . . . . . . . . . 114
+7.2 Feature contributions before and after retraining. . . . . . . . . . 121
+7.3 Corrections Highlight from Large Language Model . . . . . . . . . 123
+7.4 Example of Grammatical Corrections-based Solution . . . . . . . 125
+7.5 Example of Longer Essay-based Solution . . . . . . . . . . . . . . . 127
+7.6 Distribution of Participant Responses Across Six Survey Criteria . 129
+
+List of Tables
+2.1 Interpretation of Kappa [LK77] . . . . . . . . . . . . . . . . . . . . 25
+3.1 Description of ASAP Dataset . . . . . . . . . . . . . . . . . . . . . . 37
+3.2 Score Resolution by Prompt . . . . . . . . . . . . . . . . . . . . . . 38
+3.3 Summary of Interpretable Essay Features . . . . . . . . . . . . . . 39
+4.1 Model Performance Evaluation for ASAP Dataset . . . . . . . . . . 52
+4.2 ASAP Rubric and Resolved Score Range . . . . . . . . . . . . . . . 53
+4.3 Distribution of essay outcomes (Passing, Borderline, Failing) across
+five ASAP prompts based on scores from two human raters (HR1,
+HR2) and the AES model. All values are percentages. . . . . . . . 54
+4.4 Accuracy of off-topic detection . . . . . . . . . . . . . . . . . . . . . 55
+4.5 Examples of Wrong Prediction by Prompt 6 . . . . . . . . . . . . . 57
+4.6 Accuracy of Gibberish Detection . . . . . . . . . . . . . . . . . . . . 59
+4.7 Agreement of Prediction between Original and Paraphrased Answer 61
+5.1 A simple example of rating scale’s effect on QWK . . . . . . . . . 67
+5.2 Prompts in ASAP dataset . . . . . . . . . . . . . . . . . . . . . . . . 68
+5.3 The effect of score resolution on QWK using different algorithms 69
+5.4 The effect of score resolution on QWK using different weight of
+kappa . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 69
+6.1 Essay Features . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 90
+
+xx LIST OF TABLES
+6.2 Performance of regression models using different text features.
+Human–human agreement (QWK = 0.721) is used as the base-
+line for computing degradation. . . . . . . . . . . . . . . . . . . . . 99
+6.3 The proportion of Pairs of Essays that Satisfy Equation 2.9 (in
+percentage) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 100
+7.1 Subset of Interpretable Essay Features Used in Chapter 7 . . . . . 112
+7.2 Performance of models trained on original and counterfactual
+(CF) data under different δ values for ASAP Prompt 1 . . . . . . . 118
+7.3 Performance of models trained on original and counterfactual
+(CF) data under different δ values for ASAP Prompt 7 . . . . . . . 119
+7.4 Distribution of Means, Standard Deviations, and p-values across
+different groups for various criteria. . . . . . . . . . . . . . . . . . 131
+
+Chapter 1
+Introduction
+1.1 Automated Essay Scoring
+The role of written essays in education is well-established, serving as a key
+tool for assessing student understanding, critical thinking, and communication
+skills [HHJH +23, QK07, ASASHA20]. Whether in high-stakes testing environ-
+ments or classroom-based assessments, essays provide a platform for students
+to articulate ideas, defend arguments, and demonstrate mastery over complex
+topics. However, the process of grading essays is notoriously time-consuming
+and labor-intensive [ZB17, BBE+21, AAJH19]. Human evaluators are prone to
+inconsistencies due to fatigue, bias, and subjective interpretation of grading
+rubrics. As educational systems expand—with growing student populations
+and increasingly diverse learning contexts—manual essay grading becomes un-
+sustainable. This has led to the rise of automated solutions like Automated
+Essay Scoring (AES) systems, which aim to alleviate the burden on educa-
+tors by offering efficient, consistent, and scalable essay assessment [OOO23].
+AES refers to the computational process of assigning a score—or set of rubric-
+based ratings—to a written essay without human intervention, using natural-
+language-processing and machine-learning models trained on previously scored
+samples [Pag66,RS22,KN19].
+AES leverages machine-learning and NLP techniques to deliver rapid, con-
+sistent evaluations of student writing, reducing grading time and labour costs
+[MJS+23,GH17]. Earlier AES systems based on feature engineering and statisti-
+cal or machine-learning models were already shown to achieve high agreement
+
+2 Introduction
+with human raters under standard evaluation conditions, particularly in large-
+scale assessment contexts [AB06, YBM11]. Subsequent advances in neural and
+pre-trained language models further improved AES performance and robust-
+ness, extending beyond hand-crafted features toward end-to-end representa-
+tions of writing quality [LN24]. More recently , the emergence of generative AI
+and large language models (LLMs) has renewed interest in AES, with studies
+reporting comparable levels of agreement and reliability when LLMs are used
+alongside human raters, while also revealing new sources of variability and un-
+certainty [PBE24,MAEE24]. These operational benefits make AES an attractive
+solution for educational settings where human grading is impractical or incon-
+sistent.
+Despite these operational benefits, the broader adoption of AES systems is
+hindered by unresolved challenges related to their reliability , fairness, and ped-
+agogical validity . High human–machine agreement, typically measured with
+metrics such as Quadratic Weighted Kappa, may hide brittle behaviour on ad-
+versarial or off-topic inputs [Zir23]. Moreover, construct-irrelevant cues and
+scorer fatigue complicate any simple comparison to human grading standards
+[WXB12, BB98]. These gaps motivate the present thesis, which investigates
+robustness, individual-level fairness, and actionable feedback mechanisms for
+neural AES models. A fuller discussion of the operational benefits and known
+pitfalls of AES appears in Section 2.2.2.
+This research focuses on Automated Essay Scoring (AES)—the automatic
+assignment of holistic or analytic (rubric-based) scores to full-length student
+essays using machine learning and natural language processing. The thesis in-
+vestigates three major concerns affecting the reliability and educational value of
+AES systems: (i) the limitations of performance metrics like Quadratic Weighted
+Kappa, (ii) the detection of individual fairness violations using textual similarity
+and scoring disparity diagnostics, and (iii) the use of counterfactual explana-
+tions to generate feedback that can guide student revisions in a more actionable
+way . In this context, counterfactual suggestions may include limited grammar
+or wording changes, provided they are generated with the goal of increasing the
+predicted score. Broader Automated Writing Evaluation (AWE) functions—such
+as stand-alone grammar correction or stylistic enhancement tools—fall outside
+the scope of this thesis, except where they have a direct and measurable impact
+on the essay score. These focus areas are further developed in the problem state-
+ment and scope of the thesis (Section 1.3), and revisited across the empirical
+chapters that follow.
+
+1.2 Impact of AES on Different Stakeholders 3
+1.2 Impact of AES on Different Stakeholders
+Automated Essay Scoring (AES) systems influence the teaching and learning
+landscape in important and multifaceted ways. Beyond their technical capa-
+bilities, these systems carry broader implications for education, affecting how
+students receive timely feedback, how educators allocate time and effort in as-
+sessment, and how institutions and policymakers define evolving standards and
+expectations for writing instruction and evaluation. This section explores the
+potential benefits and challenges of AES implementation across different levels
+of the educational system.
+1.2.1 Impact on Students
+AES systems provide students with faster feedback on their writing, enabling
+them to reflect and improve their work in real time. This is especially bene-
+ficial in formative contexts, such as classroom-based writing exercises, where
+timely feedback supports iterative learning and revision [WG08,ZL20]. In large
+classes, where instructors may lack the capacity to offer individualized guid-
+ance, AES can help bridge the feedback gap [Dık06,GH17].
+However, the effectiveness of AES as a formative tool is limited by the scope
+and quality of the feedback it provides. Many systems emphasize surface-
+level features—such as grammar, word count, and sentence complexity—while
+overlooking deeper aspects of writing like creativity , voice, or argument qual-
+ity [Per14]. As a result, students may struggle to develop higher-order writing
+skills when relying heavily on automated feedback [WW06].
+In summative contexts, where AES is used to assign grades or determine
+high-stakes outcomes, fairness concerns become more pronounced. Studies
+have raised questions about potential demographic biases in AES systems, par-
+ticularly those affecting students from underrepresented or multilingual back-
+grounds [WW06]. If students perceive the scoring process as opaque or unfair,
+it can erode trust in the educational system [MJS +23]. These risks underscore
+the importance of developing AES systems that are not only accurate but also
+transparent and equitable.
+1.2.2 Impact on Educators
+For educators, AES systems offer a practical solution to the time-intensive pro-
+cess of grading essays. By automating repetitive tasks, educators can focus on
+
+4 Introduction
+Figure 1.1: AES Impact on Stakeholders
+more nuanced aspects of teaching, such as providing targeted support to stu-
+dents struggling with writing. In some contexts, educators may be involved in
+reviewing or contextualizing AES-generated scores, especially to ensure align-
+ment with instructional goals or address concerns about fairness and accuracy .
+This evolving role emphasizes the importance of integrating AES tools in ways
+that complement, rather than replace, human judgment in the assessment pro-
+cess.
+1.2.3 Impact on Educational Institutions
+Automated Essay Scoring (AES) systems have been widely used in a vast num-
+ber of educational institutions [Yin15, Zhu19]. From an administrative point of
+view, many exams and school districts already mix computer and human scor-
+ing—for example, ETS’s e-rater in the TOEFL test [RTW+12]. These tools speed
+up marking and cut costs, and some online learning platforms use them in the
+same way . Bringing AES into a school, however, still requires paying licensing
+fees, setting up the necessary infrastructure, training educators, and maintain-
+
+1.3 Scope and Problem Statement 5
+ing the software over time. Schools must also ensure the protection of student
+data and routinely monitor scoring fairness to avoid potential bias. Failure to
+do so could undermine trust and damage the institution’s reputation.
+1.2.4 Impact on Policymakers
+For policymakers, AES systems represent an opportunity to enhance the scala-
+bility and objectivity of educational assessments. By integrating AES into stan-
+dardized testing frameworks, policymakers can address challenges related to
+human grader inconsistencies and expand access to high-quality assessment
+tools. However, the adoption of AES also raises critical policy questions about
+accountability , transparency , and the equitable distribution of these technolo-
+gies. In particular, emerging European and national regulations on artificial
+intelligence and automated decision-making introduce constraints on the use of
+AES in high-stakes educational contexts, requiring clear human oversight. Pol-
+icymakers must establish guidelines to ensure that AES systems are rigorously
+evaluated and aligned with broader educational objectives.
+1.2.5 Societal Implications
+Beyond immediate stakeholders, the broader societal impact of AES encom-
+passes both potential benefits and challenges. On the positive side, AES can
+increase access to automated feedback tools, offering more students timely
+evaluations and supporting educational equity by providing consistent assess-
+ments across diverse populations. However, the reliance on machine-generated
+feedback may , in some systems, inadvertently emphasize surface-level features
+such as grammar, vocabulary , and mechanics, while overlooking more sub-
+jective and human-centric aspects like creativity , critical reflection, and voice
+[LLYH25, HHN19]. This could lead to a redefinition of writing values, narrow-
+ing the focus of writing instruction and impacting the development of critical
+thinking skills.
+1.3 Scope and Problem Statement
+Although AES can dramatically reduce grading workloads, persistent gaps in
+reliability , fairness, and feedback constrain its educational value [WXB12]. This
+section details those gaps and frames the thesis problem statement.
+
+6 Introduction
+This thesis focuses on English-language essays written by middle- and secondary-
+school students (grades 7–12), specifically within the context of standardized
+educational assessment. It targets multi-paragraph argumentative, expository ,
+or narrative essays ranging from 150 to 650 words, as represented in the widely
+used ASAP dataset (see Section 3.2.1). Essays from other learner groups, shorter
+constructed responses, and professional or domain-specific writing are outside
+the scope of this study . While issues such as plagiarism and text reuse are rele-
+vant to the validity of student-produced writing, this thesis assumes that submit-
+ted essays constitute original student work, in line with standard AES evaluation
+settings, and does not explicitly address plagiarism detection or prevention. The
+research investigates how AES systems perform in this educational context, with
+particular attention to issues of reliability , fairness, and feedback mechanism.
+Reliability. Human–computer agreement is commonly used as a benchmark
+for evaluating AES performance, yet metrics such as Quadratic Weighted Kappa
+(QWK) [Coh68] can report high scores while masking unreliable behavior on
+varied inputs [AB06]. Students may “game” the system—writing longer texts
+or adding connectors—to raise scores without improving quality [CC08], and
+even nonsensical essays may receive high marks [PBC +01]. These issues raise
+concerns about overreliance on agreement-based metrics and highlight the need
+for more robust evaluation practices.
+Fairness. Most prior work in AES fairness focuses on group fairness—the idea
+that demographic groups (e.g., by race, gender, or language background) should
+receive comparable treatment from the scoring system. In contrast, individ-
+ual fairness—the expectation that similar essays receive similar scores—has re-
+ceived less attention [DSPP22]. This gap raises concerns about score consis-
+tency at the individual level, especially when textual similarity does not trans-
+late to comparable outcomes.
+Feedback. Students benefit most from assessments that not only assign a score
+but also support meaningful revision. However, many existing AES systems
+focus primarily on score prediction and provide limited actionable guidance for
+improvement. This limited feedback constrains their pedagogical usefulness,
+particularly in formative settings where revision and learning are key goals.
+This highlights the need for approaches that explain model behavior and help
+students understand how specific changes in writing may influence their scores.
+
+1.4 Research Questions and Objectives 7
+Within the context of AES, providing feedback that is both interpretable and
+educationally meaningful presents a particular challenge. Scores alone offer
+limited insight into how an essay might be improved, while feature-based or
+abstract explanations often remain difficult for learners and educators to trans-
+late into concrete revision actions. Counterfactual explanations offer one way
+to approach this gap by focusing on minimal and targeted changes to an in-
+put that would lead to a different outcome. In educational assessment, this
+perspective aligns naturally with formative feedback practices, where students
+are encouraged to revise their work incrementally and reflect on the effects of
+specific changes. By illustrating how small modifications in writing—such as
+correcting errors or refining wording—may influence predicted scores, counter-
+factual explanations can serve as an intuitive bridge between model behavior
+and actionable guidance.
+To justify the selection of these research directions, this thesis adopts a per-
+spective centered on the trustworthy use of Automated Essay Scoring in educa-
+tional settings. For AES systems to be meaningfully deployed, it is not sufficient
+to consider high average performance alone; rather, multiple complementary
+considerations must be taken into account. First, their evaluation should rely
+on metrics that meaningfully reflect reliability , as agreement scores play a gate-
+keeping role in determining whether systems are considered valid and ready
+for use. Second, beyond aggregate performance, AES systems should be exam-
+ined for consistency at the individual level, ensuring that similar essays receive
+similar scores—an expectation that is fundamental to fairness in educational as-
+sessment. Third, AES systems should support interpretability and pedagogical
+usefulness, enabling learners and educators to understand how scores relate to
+concrete aspects of writing. In this context, counterfactual explanations repre-
+sent a promising mechanism for connecting model behavior to actionable revi-
+sion guidance by illustrating how specific textual changes influence predicted
+scores. Together, these three dimensions—evaluation metrics, individual fair-
+ness, and counterfactual feedback—form a coherent analytical framework for
+examining not only whether AES systems perform well, but whether they can
+be trusted, interpreted, and meaningfully used in practice.
+1.4 Research Questions and Objectives
+To investigate the critical challenges surrounding the reliability , fairness, and
+feedback mechanisms of AES systems, this thesis is guided by the following
+research questions:
+
+8 Introduction
+• RQ1: Does high human-computer agreement in AES indicate reliable
+performance across diverse input scenarios?
+While human-computer agreement is a commonly used metric to validate
+AES systems, it does not necessarily ensure that the model performs well
+in all circumstances. This question aims to explore whether high agree-
+ment with human scorers, typically evaluated on a narrow set of inputs,
+holds up across more varied and challenging essay types, such as off-topic
+or gibberish responses.
+• RQ2: What are the potential limitations of Quadratic Weighted Kappa
+(QWK) as an evaluation metric for AES systems?
+QWK is one of the most widely used metrics for evaluating AES perfor-
+mance, primarily due to its ability to account for chance agreement be-
+tween raters. However, this metric can be sensitive to factors such as
+rating scales, class distributions, and the prevalence of certain score cat-
+egories. This research question investigates these limitations, particularly
+in evaluation scenarios involving multiple raters or uneven score distribu-
+tions.
+• RQ3: How can individual fairness be effectively measured in AES to
+evaluate whether similar essays receive similar scores?Individual fair-
+ness in AES aims to ensure that similar essays receive similar scores. Ad-
+dressing this main question requires tackling several sub-questions:
+– RQ3.1: How can essay similarity be effectively defined and mea-
+sured? This sub-question explores appropriate ways to quantify sim-
+ilarity between essays, focusing on evaluating different textual repre-
+sentations (e.g., BOW, TF-IDF, Sentence-BERT, LASER) and distance
+metrics (e.g., cosine similarity).
+– RQ3.2: How can interpretable essay features help analyze essay
+similarity? This question examines whether human-understandable
+features—such as essay length, vocabulary richness, spelling errors,
+and grammar mistakes—can provide a more transparent and ex-
+plainable way to assess essay similarity , thereby enhancing inter-
+pretability for educators and stakeholders.
+– RQ3.3: How can individual fairness be practically evaluated in
+AES, especially considering large numbers of essay pairs? This
+question addresses the methodological challenge of assessing indi-
+vidual fairness when faced with a very large number of essay pairs,
