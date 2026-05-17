@@ -43,9 +43,20 @@ npm run fetch:task1
 ## Deploy to GitHub Pages
 
 1. Repository: **[ChengChenNO1/IELTS-Writing-Examiner-Lab](https://github.com/ChengChenNO1/IELTS-Writing-Examiner-Lab)**
-2. Push this project to the `main` branch.
-3. In GitHub → **Settings → Pages → Build and deployment**, set source to **GitHub Actions**.
-4. The workflow `.github/workflows/deploy-pages.yml` will build and publish automatically.
+2. Push to the `main` branch — workflow builds and pushes static files to the **`gh-pages`** branch.
+3. In GitHub → **Settings → Pages → Build and deployment**:
+   - **Source:** Deploy from a branch
+   - **Branch:** `gh-pages` / **Folder:** `/ (root)`
+4. Wait 1–3 minutes, then open https://chengchenno1.github.io/IELTS-Writing-Examiner-Lab/
+
+### Why “from branch” instead of “GitHub Actions” as Pages source?
+
+| Pages 设置里的 Source | 含义 |
+|---------------------|------|
+| **Deploy from a branch** | GitHub 直接托管某个分支里的静态文件（本项目用 `gh-pages` 分支） |
+| **GitHub Actions** | 由 `actions/deploy-pages` 在 Actions 里创建“Pages 部署”，**必须**选这项才能用旧版 workflow |
+
+本项目 workflow 会把构建结果推到 **`gh-pages` 分支**，因此 Pages 里应选 **from branch → gh-pages**，不要选 GitHub Actions，否则会出现 `Failed to create deployment (404)`。
 
 If your repo name differs, change `repoName` in `vite.config.js` before pushing.
 
