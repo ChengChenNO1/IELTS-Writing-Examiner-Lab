@@ -1,4 +1,7 @@
-import { calibrationNotes, rubric, Topic } from "./data";
+import { rubric, Topic } from "./data";
+import { productionPrompt } from "./ai/prompt";
+
+export { productionPrompt };
 
 export type Criterion = "TR" | "CC" | "LR" | "GRA";
 
@@ -122,32 +125,6 @@ export function essaySurfaceStats(essay: string) {
     sentenceCount: sentences(clean).length,
     paragraphCount: paragraphs(clean).length
   };
-}
-
-export function productionPrompt(topic: Topic, essay: string) {
-  const taskName = topic.task === "task1" ? "IELTS Academic Writing Task 1" : "IELTS Writing Task 2";
-  const firstCriterion = topic.task === "task1" ? "Task Achievement" : "Task Response";
-  const taskProcess =
-    topic.task === "task1"
-      ? "Extract overview, key features, comparisons, data accuracy, sequencing, and inappropriate opinion/commentary."
-      : "Extract claims, evidence, reasoning links, counterargument, and unsupported assertions.";
-  return `You are a senior IELTS Writing examiner.
-
-Strictly apply the official public ${taskName} band descriptors.
-Evaluate ${firstCriterion}, CC, LR, and GRA independently. Never reward length alone, memorised vocabulary, or global fluency.
-
-Process:
-1. Identify task type and required prompt parts.
-2. ${taskProcess}
-3. Score each criterion separately with an exact rubric anchor.
-4. For every deduction, quote the sentence that creates the limitation.
-5. Give a conservative overall band using IELTS half-band rounding.
-
-Calibration rules:
-${calibrationNotes.map((note) => `- ${note}`).join("\n")}
-
-Prompt: ${topic.prompt}
-Essay: ${essay.slice(0, 1200)}`;
 }
 
 export function evaluateEssay(topic: Topic, essay: string): Evaluation {

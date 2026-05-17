@@ -17,7 +17,7 @@ export async function evaluateEssayWithAi(
   }
 
   const messages = [
-    { role: "system" as const, content: buildExaminerSystemPrompt() },
+    { role: "system" as const, content: buildExaminerSystemPrompt(topic) },
     { role: "user" as const, content: buildExaminerUserPrompt(topic, essay) }
   ];
 
