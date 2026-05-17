@@ -31,6 +31,11 @@ jobs:
         env:
           GITHUB_PAGES: "true"
 
+      - name: Verify asset paths in index.html
+        run: |
+          grep -q "/IELTS-Writing-Examiner-Lab/assets/" dist/index.html
+          echo "Pages base path OK"
+
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
