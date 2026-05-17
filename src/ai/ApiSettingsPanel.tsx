@@ -6,6 +6,7 @@ import {
   PROVIDER_PRESETS,
   applyProviderPreset,
   apiKeyHint,
+  configForApiKeyInput,
   hasBuiltinApi,
   isAiReady,
   resolveEffectiveConfig,
@@ -63,7 +64,17 @@ export function ApiSettingsPanel({ config, onChange }: Props) {
         setTestResult(`连接失败 (${res.status})：${text.slice(0, 160)}`);
       }
     } catch (err) {
-      setTestResult(err instanceof Error ? err.message : "连接失败");
+      const msg = err instanceof Error ? err.message : "连接失败";
+      if (
+        config.provider === "ark" &&
+        /failed to fetch|networkerror|load failed/i.test(msg)
+      ) {
+        setTestResult(
+          `${msg}。若仅在 GitHub Pages 上出现，可能是浏览器跨域限制；请在本机 npm run dev 使用，或确认方舟控制台已允许浏览器调用。`
+        );
+      } else {
+        setTestResult(msg);
+      }
     } finally {
       setTesting(false);
     }
@@ -103,6 +114,12 @@ export function ApiSettingsPanel({ config, onChange }: Props) {
         <p className="bank-status api-builtin-ready">已加载内置密钥（本地环境）。填写下方自定义 Key 可覆盖。</p>
       )}
 
+      {!builtinAvailable && (
+        <p className="bank-status api-online-hint">
+          线上版（GitHub Pages）无内置密钥。请选择「火山方舟 Ark」，在下方粘贴以 <code>ark-</code> 开头的密钥。
+        </p>
+      )}
+
       <p className="bank-status">自定义密钥只保存在浏览器，不会进入 Git 仓库。</p>
 
       <label className="api-field">
@@ -118,15 +135,29 @@ export function ApiSettingsPanel({ config, onChange }: Props) {
       </label>
 
       <label className="api-field">
-        <span>自定义 API Key（可选，覆盖内置）</span>
+        <span>{builtinAvailable ? "自定义 API Key（可选，覆盖内置）" : "API Key"}</span>
         <input
           type="password"
           value={config.apiKey}
-          onChange={(event) => update({ apiKey: event.target.value })}
+          onChange={(event) => update(configForApiKeyInput(config, event.target.value))}
+          onPaste={(event) => {
+            const pasted = event.clipboardData.getData("text");
+            if (pasted.trim().startsWith("ark-")) {
+              event.preventDefault();
+              update(configForApiKeyInput(config, pasted));
+            }
+          }}
           placeholder={
-            config.provider === "grok" ? "xai-..." : config.provider === "ark" ? "ark-...（留空则用内置）" : "sk-..."
+            config.provider === "grok"
+              ? "xai-..."
+              : config.provider === "ark"
+                ? builtinAvailable
+                  ? "ark-...（留空则用内置）"
+                  : "ark-..."
+                : "sk-... 或 ark-..."
           }
           autoComplete="off"
+          spellCheck={false}
         />
       </label>
       {keyHint && <p className="eval-error">{keyHint}</p>}

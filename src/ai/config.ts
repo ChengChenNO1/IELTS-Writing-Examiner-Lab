@@ -58,8 +58,8 @@ export function hasBuiltinApi(): boolean {
 }
 
 export function freshAiConfig(): AiConfig {
+  const ark = PROVIDER_PRESETS.ark;
   if (hasBuiltinApi()) {
-    const ark = PROVIDER_PRESETS.ark;
     return {
       enabled: true,
       provider: "ark",
@@ -71,10 +71,10 @@ export function freshAiConfig(): AiConfig {
   }
   return {
     enabled: false,
-    provider: "openai",
+    provider: "ark",
     apiKey: "",
-    baseUrl: PROVIDER_PRESETS.openai.baseUrl,
-    model: PROVIDER_PRESETS.openai.models[0],
+    baseUrl: ark.baseUrl,
+    model: ark.models[0],
     useBuiltin: false
   };
 }
@@ -90,15 +90,17 @@ export function loadAiConfig(): AiConfig {
       parsed.provider && (parsed.provider === "custom" || parsed.provider in PROVIDER_PRESETS)
         ? parsed.provider
         : DEFAULT_AI_CONFIG.provider;
+    const builtin = hasBuiltinApi();
+    const preset = provider === "custom" ? PROVIDER_PRESETS.ark : PROVIDER_PRESETS[provider];
     return {
       ...freshAiConfig(),
       ...parsed,
       provider,
       enabled: Boolean(parsed.enabled),
       apiKey: String(parsed.apiKey ?? ""),
-      baseUrl: String(parsed.baseUrl ?? PROVIDER_PRESETS[provider === "custom" ? "ark" : provider].baseUrl),
-      model: String(parsed.model ?? PROVIDER_PRESETS[provider === "custom" ? "ark" : provider].models[0]),
-      useBuiltin: parsed.useBuiltin !== false
+      baseUrl: String(parsed.baseUrl ?? preset.baseUrl),
+      model: String(parsed.model ?? preset.models[0]),
+      useBuiltin: builtin ? parsed.useBuiltin !== false : false
     };
   } catch {
     return freshAiConfig();
@@ -149,7 +151,11 @@ export function apiKeyHint(config: AiConfig): string | null {
     return null;
   }
 
-  if (config.provider === "ark" && !key.startsWith("ark-")) {
+  if (key.startsWith("ark-") && config.provider !== "ark" && config.provider !== "custom") {
+    return "检测到 ark- 密钥：请将服务商切换为「火山方舟 Ark」。";
+  }
+
+  if (config.provider === "ark" && key.length >= 8 && !key.startsWith("ark-")) {
     return "火山方舟密钥通常以 ark- 开头。";
   }
 
@@ -183,5 +189,22 @@ export function applyProviderPreset(config: AiConfig, provider: AiProviderPreset
     provider,
     baseUrl: preset.baseUrl,
     model: preset.models[0]
+  };
+}
+
+/** When user pastes an ark- key, align provider and endpoint automatically. */
+export function configForApiKeyInput(config: AiConfig, apiKey: string): AiConfig {
+  const trimmed = apiKey.trim();
+  if (!trimmed.startsWith("ark-")) {
+    return { ...config, apiKey };
+  }
+  const ark = PROVIDER_PRESETS.ark;
+  return {
+    ...config,
+    apiKey,
+    provider: "ark",
+    useBuiltin: false,
+    baseUrl: ark.baseUrl,
+    model: config.provider === "ark" && ark.models.includes(config.model) ? config.model : ark.models[0]
   };
 }
