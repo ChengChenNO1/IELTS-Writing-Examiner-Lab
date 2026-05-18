@@ -65,6 +65,7 @@ export type ImageVisual = {
   src: string;
   alt: string;
   source?: string;
+  remoteSrc?: string;
 };
 
 export type Task1VisualSpec =

@@ -9,7 +9,10 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "fetch:task1": "node scripts/fetch-task1.mjs",
-    "fetch:yanyihann": "node scripts/fetch-yanyihann.mjs"
+    "fetch:yanyihann": "node scripts/fetch-yanyihann.mjs",
+    "fetch:ieltscb": "node scripts/fetch-ieltscb.mjs",
+    "mirror:task1-images": "node scripts/mirror-task1-images.mjs",
+    "import:simon": "python scripts/import-simon-pdfs.py"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^5.1.1",

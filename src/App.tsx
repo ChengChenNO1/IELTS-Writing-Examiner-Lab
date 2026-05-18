@@ -25,6 +25,8 @@ import { Evaluation, essaySurfaceStats, evaluateEssay } from "./evaluator";
 import { resolveTask1Visual } from "./task1/resolveVisual";
 import { Task1Visual } from "./task1/Task1Visual";
 import { useTask1Bank } from "./task1/useTask1Bank";
+import { useIeltscbBank } from "./useIeltscbBank";
+import { useSimonBank } from "./useSimonBank";
 import { useYanyihannBank } from "./useYanyihannBank";
 
 const sampleTask2 = `Artificial intelligence is already changing education, and I believe it can improve learning if schools use it carefully. Some people are worried that students will become too dependent on machines, but the benefits are stronger when teachers remain in control.
@@ -143,13 +145,18 @@ function ArgumentPanel({ evaluation }: { evaluation: Evaluation }) {
 function topicBadge(item: Topic) {
   if (item.source === "custom") return "custom";
   if (item.source === "external") return "web";
-  if (item.source === "yanyihann") return "真题";
+  if (item.source === "simon" || item.contentKind === "model") return "范文";
+  if (item.source === "simon-ideas" || item.contentKind === "ideas") return "ideas";
+  if (item.source === "yanyihann" || item.source === "ieltscb-recall") return "真题";
+  if (item.source === "ieltscb") return "剑雅";
   return item.type;
 }
 
 function App() {
   const { externalTopics, loading: bankLoading } = useTask1Bank();
   const { bankTopics: yanyihannTopics, loading: yhLoading, meta: yhMeta } = useYanyihannBank();
+  const { bankTopics: ieltscbTopics, loading: cbLoading, error: cbError, meta: cbMeta } = useIeltscbBank();
+  const { bankTopics: simonTopics, loading: simonLoading, meta: simonMeta } = useSimonBank();
   const [activeTask, setActiveTask] = useState<Topic["task"]>("task2");
   const [customTopics, setCustomTopics] = useState<Topic[]>([]);
   const [topicId, setTopicId] = useState("ai-education");
@@ -169,26 +176,33 @@ function App() {
   const allTopics = useMemo(() => {
     const builtin = topics.filter((item) => item.task === activeTask);
     const yh = activeTask === "task2" ? yanyihannTopics : [];
+    const cb = activeTask === "task1" ? ieltscbTopics : [];
+    const simon = activeTask === "task2" ? simonTopics : [];
     const ext = activeTask === "task1" ? externalTopics : [];
     const custom = customTopics.filter((item) => item.task === activeTask);
-    return [...builtin, ...yh, ...ext, ...custom];
-  }, [activeTask, yanyihannTopics, externalTopics, customTopics]);
+    if (activeTask === "task1") {
+      return [...cb, ...ext, ...builtin, ...custom];
+    }
+    return [...builtin, ...yh, ...simon, ...custom];
+  }, [activeTask, yanyihannTopics, ieltscbTopics, simonTopics, externalTopics, customTopics]);
 
   const yearOptions = useMemo(() => {
+    const pool = activeTask === "task2" ? yanyihannTopics : ieltscbTopics;
     const years = new Set<number>();
-    for (const item of yanyihannTopics) {
+    for (const item of pool) {
       if (item.year) years.add(item.year);
     }
     return Array.from(years).sort((a, b) => b - a);
-  }, [yanyihannTopics]);
+  }, [activeTask, yanyihannTopics, ieltscbTopics]);
 
   const categoryOptions = useMemo(() => {
+    const pool = activeTask === "task2" ? [...yanyihannTopics, ...simonTopics] : ieltscbTopics;
     const cats = new Set<string>();
-    for (const item of yanyihannTopics) {
+    for (const item of pool) {
       if (item.topicCategory) cats.add(item.topicCategory);
     }
     return Array.from(cats).sort((a, b) => a.localeCompare(b));
-  }, [yanyihannTopics]);
+  }, [activeTask, yanyihannTopics, ieltscbTopics, simonTopics]);
 
   const filteredTopics = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -242,8 +256,9 @@ function App() {
     setYearFilter("");
     setCategoryFilter("");
     const next =
+      (task === "task1" ? ieltscbTopics[0] : yanyihannTopics[0]) ??
       topics.find((item) => item.task === task) ??
-      (task === "task2" ? yanyihannTopics[0] : externalTopics[0]) ??
+      (task === "task1" ? externalTopics[0] : undefined) ??
       customTopics.find((item) => item.task === task);
     if (next) {
       setTopicId(next.id);
@@ -255,7 +270,7 @@ function App() {
 
   function chooseTopic(next: Topic) {
     setTopicId(next.id);
-    setEssay(sampleForTask(next.task));
+    setEssay(next.modelEssay?.trim() || sampleForTask(next.task));
     setHistory([]);
   }
 
@@ -305,13 +320,12 @@ function App() {
               Task 2
             </button>
           </div>
-          {activeTask === "task2" && (
-            <div className="topic-filters">
+          <div className="topic-filters">
               <input
                 className="topic-search"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="搜索题目（中英文）"
+                placeholder="搜索题目（中英文、C20-T1、范文）"
               />
               <div className="filter-row">
                 <select value={yearFilter} onChange={(event) => setYearFilter(event.target.value)}>
@@ -332,14 +346,28 @@ function App() {
                 </select>
               </div>
               <p className="bank-status">
-                {yhLoading
-                  ? "正在加载 yanyihann 真题库…"
-                  : yhMeta
-                    ? `真题 ${yhMeta.count} 题 · 显示 ${filteredTopics.length} 题`
-                    : "运行 npm run fetch:yanyihann 可更新真题库"}
+                {yhLoading || cbLoading || simonLoading
+                  ? "正在加载题库…"
+                  : activeTask === "task1"
+                    ? [
+                        cbMeta ? `机考小作文 ${ieltscbTopics.length}` : null,
+                        cbError ? `机考题库加载失败` : null,
+                        `显示 ${filteredTopics.length} 题`
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")
+                    : [
+                        yhMeta ? `大作文真题 ${yhMeta.count}` : null,
+                        simonTopics.length ? `Simon范文 ${simonTopics.length}` : null,
+                        `显示 ${filteredTopics.length} 题`
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                {activeTask === "task1" && !cbLoading && !ieltscbTopics.length
+                  ? " · 请运行 npm run fetch:ieltscb 并确保已提交 public/data/ieltscb-task1.json"
+                  : ""}
               </p>
-            </div>
-          )}
+          </div>
           <div className="topic-list">
             {filteredTopics.length ? (
               filteredTopics.map((item) => (
@@ -358,7 +386,7 @@ function App() {
           {activeTask === "task1" && bankLoading && <p className="bank-status">Loading external practice charts…</p>}
           <p className="prompt-text">{topic.prompt}</p>
           {topic.promptZh && <p className="prompt-text prompt-zh">{topic.promptZh}</p>}
-          {topic.topicCategory && topic.source === "yanyihann" && (
+          {topic.topicCategory && (topic.source === "yanyihann" || topic.source === "ieltscb" || topic.source === "ieltscb-recall") && (
             <p className="bank-status">
               {topic.year ? `${topic.year} · ` : ""}
               {topic.examDate ? `${topic.examDate} · ` : ""}

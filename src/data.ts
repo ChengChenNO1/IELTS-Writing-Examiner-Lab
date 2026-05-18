@@ -25,9 +25,14 @@ export type Topic = {
     | "advantages"
     | "problem-solution";
   keywords: string[];
-  source?: "built-in" | "custom" | "external" | "yanyihann";
+  source?: "built-in" | "custom" | "external" | "yanyihann" | "ieltscb" | "ieltscb-recall" | "simon" | "simon-ideas";
+  contentKind?: "exam" | "model" | "ideas";
+  modelEssay?: string;
+  bank?: string;
+  listName?: string;
   visual?: Task1VisualSpec;
   imageUrl?: string;
+  imageRemoteUrl?: string;
   sourceUrl?: string;
   year?: number | null;
   examDate?: string | null;

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   BarVisual,
   ImageVisual,
@@ -8,6 +9,7 @@ import {
   TableVisual,
   Task1VisualSpec
 } from "./types";
+import { resolveTask1ImageSrc } from "./imageSrc";
 
 const W = 520;
 const H = 300;
@@ -269,9 +271,47 @@ function ProcessFlow({ visual }: { visual: ProcessVisual }) {
 }
 
 function ExternalImage({ visual }: { visual: ImageVisual }) {
+  const [src, setSrc] = useState(visual.src);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setSrc(visual.src);
+    setFailed(false);
+  }, [visual.src]);
+
+  async function retryRemote() {
+    const remote = visual.remoteSrc;
+    if (!remote) return;
+    try {
+      const res = await fetch(remote, { referrerPolicy: "no-referrer" });
+      if (!res.ok) throw new Error(String(res.status));
+      const blob = await res.blob();
+      setSrc(URL.createObjectURL(blob));
+      setFailed(false);
+    } catch {
+      setFailed(true);
+    }
+  }
+
   return (
     <figure className="task1-image-wrap">
-      <img src={visual.src} alt={visual.alt} loading="lazy" referrerPolicy="no-referrer" />
+      {!failed ? (
+        <img
+          src={src}
+          alt={visual.alt}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => {
+            if (visual.remoteSrc && src !== visual.remoteSrc) {
+              void retryRemote();
+            } else {
+              setFailed(true);
+            }
+          }}
+        />
+      ) : (
+        <p className="bank-status">图表加载失败。请运行 npm run mirror:task1-images 下载本地图片。</p>
+      )}
       {visual.source && <figcaption>Source: {visual.source}</figcaption>}
     </figure>
   );
